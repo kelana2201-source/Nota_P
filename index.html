@@ -1,0 +1,892 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>Generator Nota SPBU / Pertashop / Minimarket</title>
+
+    <!-- PWA -->
+    <meta name="theme-color" content="#1a3a8a">
+    <meta name="mobile-web-app-capable" content="yes">
+
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Nota SPBU">
+    <meta name="application-name" content="Nota SPBU">
+    <meta name="description" content="Generator nota thermal untuk Pertashop, SPBU, dan Minimarket">
+
+    <link rel="manifest" href="manifest.webmanifest">
+    <link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="icons/favicon-16.png">
+    <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="icons/apple-touch-icon.png">
+
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+
+        body {
+            font-family: 'Segoe UI', Arial, sans-serif;
+            background: #e2e8f0;
+            display: flex;
+            gap: 24px;
+            padding: 20px;
+            min-height: 100vh;
+        }
+
+        .controls {
+            width: 390px;
+            background: white;
+            padding: 18px 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+            height: fit-content;
+            position: sticky;
+            top: 16px;
+            max-height: 96vh;
+            overflow-y: auto;
+        }
+
+        .controls h2 {
+            font-size: 17px;
+            color: #1e40af;
+            margin-bottom: 14px;
+            padding-bottom: 8px;
+            border-bottom: 2px solid #1e40af;
+        }
+
+        .controls h3 {
+            font-size: 13px;
+            color: #334155;
+            margin: 16px 0 8px;
+            background: #f1f5f9;
+            padding: 6px 10px;
+            border-radius: 6px;
+        }
+
+        .controls label {
+            display: block;
+            font-size: 12px;
+            margin: 7px 0 3px;
+            color: #475569;
+            font-weight: 600;
+        }
+
+        .controls input[type="text"],
+        .controls input[type="number"],
+        .controls input[type="datetime-local"],
+        .controls select {
+            width: 100%;
+            padding: 7px 10px;
+            border: 1px solid #cbd5e1;
+            border-radius: 6px;
+            font-size: 13px;
+        }
+
+        .controls input:focus, .controls select:focus {
+            outline: none;
+            border-color: #2563eb;
+            box-shadow: 0 0 0 3px rgba(37,99,235,0.15);
+        }
+
+        .controls input[readonly] {
+            background: #f1f5f9;
+            font-weight: 600;
+            color: #0f172a;
+        }
+
+        .row-2 {
+            display: flex;
+            gap: 10px;
+        }
+        .row-2 > div { flex: 1; }
+
+        .mode-box {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 10px;
+        }
+        .mode-btn {
+            flex: 1;
+            padding: 10px 6px;
+            border: 2px solid #cbd5e1;
+            border-radius: 8px;
+            background: #f8fafc;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: 600;
+            text-align: center;
+            transition: all 0.2s;
+            color: #475569;
+        }
+        .mode-btn.active {
+            border-color: #2563eb;
+            background: #eff6ff;
+            color: #1e40af;
+        }
+        .mode-btn:hover { border-color: #93c5fd; }
+
+        .btn-group {
+            display: flex;
+            gap: 8px;
+            margin-top: 16px;
+        }
+
+        .btn {
+            flex: 1;
+            padding: 11px 8px;
+            border: none;
+            border-radius: 7px;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 600;
+            color: white;
+        }
+
+        .btn-update { background: #2563eb; }
+        .btn-update:hover { background: #1d4ed8; }
+        .btn-print { background: #16a34a; }
+        .btn-print:hover { background: #15803d; }
+        .btn-reset { background: #64748b; width: 100%; margin-top: 8px; }
+        .btn-reset:hover { background: #475569; }
+
+        .logo-preview {
+            width: 80px;
+            height: 80px;
+            border: 2px dashed #cbd5e1;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            margin-top: 6px;
+            background: #f8fafc;
+        }
+        .logo-preview img {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+        }
+
+        .hint { font-size: 11px; color: #94a3b8; margin-top: 3px; }
+
+        .info-box {
+            background: #ecfdf5;
+            border: 1px solid #a7f3d0;
+            color: #065f46;
+            padding: 8px 10px;
+            border-radius: 6px;
+            font-size: 12px;
+            margin-top: 8px;
+            line-height: 1.4;
+        }
+
+        .receipt-wrapper {
+            flex: 1;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            padding-top: 10px;
+        }
+
+        .receipt {
+            background: white;
+            padding: 18px 16px;
+            box-shadow: 0 6px 25px rgba(0,0,0,0.12);
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 13px;
+            line-height: 1.4;
+            color: #111;
+            transition: width 0.3s;
+        }
+
+        .receipt.size-58 { width: 220px; font-size: 11.5px; }
+        .receipt.size-80 { width: 302px; font-size: 13px; }
+        .receipt.size-58 .nama { font-size: 12px; }
+        .receipt.size-80 .nama { font-size: 14px; }
+
+        .center { text-align: center; }
+        .bold { font-weight: bold; }
+
+        .logo-area { text-align: center; margin-bottom: 8px; }
+        .logo-area img { max-height: 55px; max-width: 140px; object-fit: contain; }
+
+        .header .nama { font-weight: bold; letter-spacing: 0.2px; line-height: 1.25; }
+        .header .alamat { font-size: 0.92em; margin-top: 1px; }
+
+        .datetime { margin: 7px 0 3px; font-size: 0.95em; }
+
+        .separator { border-top: 1px dashed #333; margin: 8px 0; }
+        .separator-double { border-top: 2px solid #222; margin: 7px 0; }
+
+        .row { display: flex; margin: 2px 0; }
+        .row .label { width: 105px; flex-shrink: 0; }
+        .receipt.size-58 .row .label { width: 85px; }
+        .row .colon { width: 12px; flex-shrink: 0; }
+        .row .value { flex: 1; }
+
+        .total-row { font-size: 1.15em; font-weight: bold; margin: 5px 0 3px; }
+
+        .footer { margin-top: 9px; text-align: center; font-size: 0.92em; }
+        .footer .pesan { margin-top: 8px; font-size: 0.85em; line-height: 1.5; }
+
+        .template-minimarket .row .label { width: 95px; }
+
+        @media print {
+            body { background: white; padding: 0; margin: 0; }
+            .controls { display: none !important; }
+            .receipt-wrapper { padding: 0; }
+            .receipt { box-shadow: none !important; margin: 0 auto; }
+            .receipt.size-58 { width: 58mm; }
+            .receipt.size-80 { width: 80mm; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="controls">
+        <h2>🧾 Generator Nota SPBU</h2>
+
+        <h3>1. Pilih Template</h3>
+        <label>Jenis Usaha</label>
+        <select id="template" onchange="applyTemplate()">
+            <option value="pertashop">Pertashop</option>
+            <option value="spbu">SPBU Biasa (Pertamina)</option>
+            <option value="minimarket">Minimarket / Toko</option>
+        </select>
+
+        <h3>2. Ukuran Kertas & Font</h3>
+        <label>Lebar Kertas Thermal</label>
+        <select id="paperSize" onchange="updateNota()">
+            <option value="80">80 mm (Standar)</option>
+            <option value="58">58 mm (Kecil)</option>
+        </select>
+
+        <label>Font Nota</label>
+        <select id="fontFamily" onchange="updateNota()">
+            <option value="'Courier New', Courier, monospace">Courier New (Mirip Thermal)</option>
+            <option value="'Lucida Console', Monaco, monospace">Lucida Console</option>
+            <option value="'Consolas', 'Courier New', monospace">Consolas</option>
+            <option value="Arial, Helvetica, sans-serif">Arial (Modern)</option>
+            <option value="'Times New Roman', Times, serif">Times New Roman</option>
+            <option value="Verdana, Geneva, sans-serif">Verdana</option>
+        </select>
+
+        <label>Ukuran Font</label>
+        <select id="fontSize" onchange="updateNota()">
+            <option value="11">Kecil (11px)</option>
+            <option value="12">Sedang (12px)</option>
+            <option value="13" selected>Normal (13px)</option>
+            <option value="14">Besar (14px)</option>
+            <option value="15">Sangat Besar (15px)</option>
+        </select>
+
+        <h3>3. Logo</h3>
+
+        <label>Upload Logo (opsional)</label>
+        <input type="file" id="logoInput" accept="image/*" onchange="loadLogo(event)">
+        <div class="logo-preview" id="logoPreview">
+            <span style="font-size:11px;color:#94a3b8;">Logo</span>
+        </div>
+        <div class="hint">PNG/JPG transparan lebih bagus</div>
+        <label style="margin-top:8px;">
+            <input type="checkbox" id="showLogo" checked onchange="updateNota()"> Tampilkan Logo
+        </label>
+
+        <h3>4. Data Toko</h3>
+        <label>Nama Toko / SPBU</label>
+        <input type="text" id="namaToko" value="PERTASHOP CV.MITRA NIAGA ABADI">
+
+        <label>Alamat Baris 1</label>
+        <input type="text" id="alamat1" value="Jl.PANICAN KEDUNG BENDA">
+
+        <label>Alamat Baris 2</label>
+        <input type="text" id="alamat2" value="PURBALINGGA">
+
+        <label>No. Telepon</label>
+        <input type="text" id="telepon" value="">
+
+        <h3>5. Tanggal & Transaksi</h3>
+        <label>Tanggal & Waktu</label>
+        <input type="datetime-local" id="inputTanggal" value="2026-08-14T07:33">
+
+        <div class="row-2">
+            <div>
+                <label>No. Selang / No.Meja</label>
+                <input type="text" id="noSelang" value="1">
+            </div>
+            <div>
+                <label>No. Nota</label>
+                <input type="text" id="noNota" value="3471">
+            </div>
+        </div>
+
+        <!-- ===== BAGIAN SPBU / PERTASHOP (1 item) ===== -->
+        <div id="sectionFuel">
+            <label>Jenis BBM</label>
+            <input type="text" id="jenisBBM" value="Pertamax">
+
+            <h3>6. Cara Beli (Pilih Mode)</h3>
+            
+            <div class="mode-box">
+                <div class="mode-btn active" id="modeLiter" onclick="setMode('liter')">
+                    ⛽ Isi Liter<br>
+                    <small style="font-weight:400">Total otomatis</small>
+                </div>
+                <div class="mode-btn" id="modeUang" onclick="setMode('uang')">
+                    💰 Isi Uang<br>
+                    <small style="font-weight:400">Liter otomatis</small>
+                </div>
+            </div>
+
+            <label>Harga / Liter (angka)</label>
+            <input type="number" id="hargaAngka" value="15850" oninput="hitungOtomatis()">
+
+            <div id="inputLiterGroup">
+                <label>Jumlah Liter</label>
+                <input type="number" id="literAngka" value="1.57" step="0.01" oninput="hitungOtomatis()">
+            </div>
+
+            <div id="inputUangGroup" style="display:none;">
+                <label>Nominal Uang (yang dibayar)</label>
+                <input type="number" id="uangAngka" value="25000" step="1000" oninput="hitungOtomatis()">
+            </div>
+
+            <label>Total</label>
+            <input type="text" id="totalDisplay" value="Rp 24.885,-" readonly>
+
+            <label>Jumlah Liter (hasil)</label>
+            <input type="text" id="literDisplay" value="1,57 Ltr" readonly>
+
+            <div class="info-box" id="infoMode">
+                Mode aktif: <strong>Isi Liter</strong> → Total dihitung otomatis dari Liter × Harga
+            </div>
+        </div>
+
+        <!-- ===== BAGIAN MINIMARKET (MULTI ITEM) ===== -->
+        <div id="sectionItems" style="display:none;">
+            <h3>6. Daftar Belanja (Multi Item)</h3>
+            <div class="info-box" style="margin-bottom:10px;">
+                Tambah barang sebanyak yang dibutuhkan. Total otomatis dihitung.
+            </div>
+
+            <div id="itemList"></div>
+
+            <button type="button" onclick="tambahItem()" style="width:100%; margin-top:8px; padding:9px; background:#2563eb; color:white; border:none; border-radius:6px; font-weight:600; cursor:pointer;">
+                + Tambah Item
+            </button>
+
+            <label style="margin-top:12px;">Total Belanja</label>
+            <input type="text" id="totalItemsDisplay" value="Rp 0,-" readonly>
+        </div>
+
+        <label style="margin-top:12px;">Operator / Kasir</label>
+        <input type="text" id="operator" value="Operator 1">
+
+
+        <h3>7. Pesan Footer</h3>
+        <label>Baris 1</label>
+        <input type="text" id="footer1" value="TERIMAKASIH & SELAMAT JALAN">
+        <label>Baris 2 (pesan)</label>
+        <input type="text" id="footer2" value="Ayo Patuhi 5M : Memakai Masker, Mencuci Tangan, Menjaga jarak, Membatasi Kerumunan & Mobilitas">
+
+        <!-- PILIH PERANGKAT CETAK -->
+        <h3>8. Cetak dari Perangkat</h3>
+        
+        <div class="mode-box">
+            <div class="mode-btn active" id="devicePC" onclick="setDevice('pc')">
+                💻 PC / Laptop<br>
+                <small style="font-weight:400">USB / WiFi</small>
+            </div>
+            <div class="mode-btn" id="deviceHP" onclick="setDevice('hp')">
+                📱 HP Android / iOS<br>
+                <small style="font-weight:400">Bluetooth</small>
+            </div>
+        </div>
+
+        <div id="infoPC" class="info-box" style="background:#eff6ff; border-color:#93c5fd; color:#1e40af;">
+            <strong>Cetak dari PC:</strong><br>
+            1. Hubungkan printer (USB/WiFi)<br>
+            2. Klik tombol <b>Cetak PC</b> di bawah<br>
+            3. Pilih printer thermal → Margins: None
+        </div>
+
+        <div id="infoHP" class="info-box" style="display:none; background:#fef3c7; border-color:#fcd34d; color:#92400e;">
+            <strong>Cetak dari HP:</strong><br>
+            1. Pairing printer via Bluetooth<br>
+            2. Disarankan pakai aplikasi <b>RawBT</b><br>
+            3. Klik <b>Cetak HP</b> → Share ke RawBT / Print
+        </div>
+
+        <div class="btn-group" style="margin-top:12px;">
+            <button class="btn btn-update" onclick="updateNota()">↻ Update</button>
+            <button class="btn btn-print" id="btnCetak" onclick="cetakSekarang()">🖨 Cetak PC</button>
+        </div>
+        <button class="btn btn-reset" onclick="resetData()">Reset ke Default</button>
+    </div>
+
+
+    <div class="receipt-wrapper">
+        <div class="receipt size-80" id="nota">
+            <div class="logo-area" id="logoArea" style="display:none;">
+                <img id="logoImg" src="" alt="Logo">
+            </div>
+
+            <div class="header center">
+                <div class="nama" id="v-nama">PERTASHOP CV.MITRA NIAGA ABADI</div>
+                <div class="alamat" id="v-alamat1">Jl.PANICAN KEDUNG BENDA</div>
+                <div class="alamat" id="v-alamat2">PURBALINGGA</div>
+                <div class="alamat">Tlp: <span id="v-telepon"></span></div>
+            </div>
+
+            <div class="center datetime">
+                <span id="v-hari">Jum'at</span>
+                <span id="v-tanggal">14/08/2026</span>
+                <span id="v-waktu">07:33:19</span>
+            </div>
+
+            <div class="separator-double"></div>
+
+            <div class="row">
+                <span class="label" id="label-selang">No. Selang</span>
+                <span class="colon">:</span>
+                <span class="value" id="v-selang">1</span>
+            </div>
+            <div class="row">
+                <span class="label">No. Nota</span>
+                <span class="colon">:</span>
+                <span class="value" id="v-nota">3471</span>
+            </div>
+
+            <!-- Mode SPBU/Pertashop (1 item) -->
+            <div id="receiptFuel">
+                <div class="row">
+                    <span class="label" id="label-bbm">Jenis BBM</span>
+                    <span class="colon">:</span>
+                    <span class="value" id="v-bbm">Pertamax</span>
+                </div>
+                <div class="row">
+                    <span class="label" id="label-harga">Harga/Liter</span>
+                    <span class="colon">:</span>
+                    <span class="value" id="v-harga">Rp 15.850</span>
+                </div>
+                <div class="row">
+                    <span class="label" id="label-liter">Jumlah Liter</span>
+                    <span class="colon">:</span>
+                    <span class="value" id="v-liter">1,57 Ltr</span>
+                </div>
+            </div>
+
+            <!-- Mode Minimarket (multi item) -->
+            <div id="receiptItems" style="display:none;">
+                <div style="margin:6px 0 4px; font-size:0.9em;" class="bold">Daftar Belanja:</div>
+                <div id="v-items"></div>
+            </div>
+
+            <div class="separator"></div>
+
+            <div class="row total-row">
+                <span class="label">Total</span>
+                <span class="colon">:</span>
+                <span class="value" id="v-total">Rp 24.885,-</span>
+            </div>
+
+            <div class="separator"></div>
+
+            <div class="row">
+                <span class="label" id="label-operator">Operator</span>
+                <span class="colon">:</span>
+                <span class="value" id="v-operator">Operator 1</span>
+            </div>
+
+
+            <div class="separator-double"></div>
+
+            <div class="footer">
+                <div class="bold" id="v-footer1">TERIMAKASIH & SELAMAT JALAN</div>
+                <div class="pesan" id="v-footer2">
+                    Ayo Patuhi 5M : Memakai Masker,<br>
+                    Mencuci Tangan, Menjaga jarak,<br>
+                    Membatasi Kerumunan & Mobilitas
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentMode = 'liter';
+        let currentDevice = 'pc';
+        let logoDataUrl = null;
+
+        function setDevice(device) {
+            currentDevice = device;
+            document.getElementById('devicePC').classList.toggle('active', device === 'pc');
+            document.getElementById('deviceHP').classList.toggle('active', device === 'hp');
+            document.getElementById('infoPC').style.display = device === 'pc' ? 'block' : 'none';
+            document.getElementById('infoHP').style.display = device === 'hp' ? 'block' : 'none';
+
+            const btn = document.getElementById('btnCetak');
+            if (device === 'pc') {
+                btn.textContent = '🖨 Cetak PC';
+                btn.style.background = '#16a34a';
+            } else {
+                btn.textContent = '📱 Cetak HP';
+                btn.style.background = '#d97706';
+            }
+        }
+
+        function cetakSekarang() {
+            if (currentDevice === 'pc') {
+                window.print();
+            } else {
+                // Mode HP: coba Web Share API dulu, fallback ke print
+                if (navigator.share) {
+                    // Buat teks nota untuk di-share (opsional)
+                    alert('Untuk hasil terbaik di HP Android:\n\n1. Install aplikasi RawBT\n2. Hubungkan printer Bluetooth\n3. Di Chrome ketuk ⋮ → Share → RawBT\n\nAtau tekan OK untuk tetap memakai Print biasa.');
+                    window.print();
+                } else {
+                    window.print();
+                }
+            }
+        }
+
+
+        function formatRupiah(angka) {
+            return 'Rp ' + Math.round(angka).toLocaleString('id-ID') + ',-';
+        }
+        function formatHarga(angka) {
+            return 'Rp ' + Math.round(angka).toLocaleString('id-ID');
+        }
+        function formatLiter(angka) {
+            return angka.toFixed(2).replace('.', ',') + ' Ltr';
+        }
+
+        // ========== MULTI ITEM (MINIMARKET) ==========
+        let items = [
+            { nama: 'Indomie Goreng', qty: 2, harga: 3500 },
+            { nama: 'Aqua 600ml', qty: 3, harga: 3000 },
+            { nama: 'Kopi Kapal Api', qty: 1, harga: 1500 }
+        ];
+
+        function renderItemList() {
+            const container = document.getElementById('itemList');
+            if (!container) return;
+            container.innerHTML = '';
+
+            items.forEach((item, idx) => {
+                const div = document.createElement('div');
+                div.style.cssText = 'background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; padding:10px; margin-bottom:8px;';
+                div.innerHTML = `
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+                        <strong style="font-size:12px;">Item ${idx + 1}</strong>
+                        <button type="button" onclick="hapusItem(${idx})" style="background:#ef4444; color:white; border:none; border-radius:4px; padding:3px 8px; font-size:11px; cursor:pointer;">Hapus</button>
+                    </div>
+                    <label style="font-size:11px;">Nama Barang</label>
+                    <input type="text" value="${item.nama}" onchange="items[${idx}].nama=this.value; hitungItems();" style="width:100%; padding:5px 8px; margin-bottom:5px; border:1px solid #cbd5e1; border-radius:4px; font-size:12px;">
+                    <div style="display:flex; gap:8px;">
+                        <div style="flex:1;">
+                            <label style="font-size:11px;">Qty</label>
+                            <input type="number" value="${item.qty}" min="1" onchange="items[${idx}].qty=parseFloat(this.value)||1; hitungItems();" style="width:100%; padding:5px 8px; border:1px solid #cbd5e1; border-radius:4px; font-size:12px;">
+                        </div>
+                        <div style="flex:1;">
+                            <label style="font-size:11px;">Harga</label>
+                            <input type="number" value="${item.harga}" min="0" onchange="items[${idx}].harga=parseFloat(this.value)||0; hitungItems();" style="width:100%; padding:5px 8px; border:1px solid #cbd5e1; border-radius:4px; font-size:12px;">
+                        </div>
+                    </div>
+                    <div style="margin-top:5px; font-size:12px; color:#64748b;">
+                        Subtotal: <strong>${formatRupiah(item.qty * item.harga)}</strong>
+                    </div>
+                `;
+                container.appendChild(div);
+            });
+            hitungItems();
+        }
+
+        function tambahItem() {
+            items.push({ nama: 'Barang Baru', qty: 1, harga: 0 });
+            renderItemList();
+        }
+
+        function hapusItem(idx) {
+            if (items.length <= 1) {
+                alert('Minimal harus ada 1 item');
+                return;
+            }
+            items.splice(idx, 1);
+            renderItemList();
+        }
+
+        function hitungItems() {
+            let total = 0;
+            items.forEach(it => total += (it.qty * it.harga));
+
+            const totalDisplay = document.getElementById('totalItemsDisplay');
+            if (totalDisplay) totalDisplay.value = formatRupiah(total);
+
+            // Update nota
+            const vItems = document.getElementById('v-items');
+            if (vItems) {
+                let html = '';
+                items.forEach(it => {
+                    const sub = it.qty * it.harga;
+                    html += `<div style="margin:3px 0; font-size:0.92em;">
+                        <div>${it.nama}</div>
+                        <div style="display:flex; justify-content:space-between;">
+                            <span>${it.qty} x ${formatHarga(it.harga)}</span>
+                            <span>${formatRupiah(sub)}</span>
+                        </div>
+                    </div>`;
+                });
+                vItems.innerHTML = html;
+            }
+
+            const vTotal = document.getElementById('v-total');
+            if (vTotal) vTotal.textContent = formatRupiah(total);
+        }
+
+        function setMode(mode) {
+
+            currentMode = mode;
+            document.getElementById('modeLiter').classList.toggle('active', mode === 'liter');
+            document.getElementById('modeUang').classList.toggle('active', mode === 'uang');
+            document.getElementById('inputLiterGroup').style.display = mode === 'liter' ? 'block' : 'none';
+            document.getElementById('inputUangGroup').style.display = mode === 'uang' ? 'block' : 'none';
+
+            const info = document.getElementById('infoMode');
+            if (mode === 'liter') {
+                info.innerHTML = 'Mode aktif: <strong>Isi Liter</strong> → Total dihitung otomatis dari Liter × Harga';
+            } else {
+                info.innerHTML = 'Mode aktif: <strong>Isi Uang</strong> → Jumlah Liter dihitung otomatis dari Uang ÷ Harga';
+            }
+            hitungOtomatis();
+        }
+
+        function hitungOtomatis() {
+            const harga = parseFloat(document.getElementById('hargaAngka').value) || 0;
+            let liter = 0;
+            let total = 0;
+
+            if (currentMode === 'liter') {
+                liter = parseFloat(document.getElementById('literAngka').value) || 0;
+                total = harga * liter;
+            } else {
+                total = parseFloat(document.getElementById('uangAngka').value) || 0;
+                liter = harga > 0 ? (total / harga) : 0;
+            }
+
+            document.getElementById('totalDisplay').value = formatRupiah(total);
+            document.getElementById('literDisplay').value = formatLiter(liter);
+            document.getElementById('v-harga').textContent = formatHarga(harga);
+            document.getElementById('v-liter').textContent = formatLiter(liter);
+            document.getElementById('v-total').textContent = formatRupiah(total);
+        }
+
+        function loadLogo(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                logoDataUrl = e.target.result;
+                document.getElementById('logoPreview').innerHTML = '<img src="' + logoDataUrl + '">';
+                updateNota();
+            };
+            reader.readAsDataURL(file);
+        }
+
+        const templates = {
+            pertashop: {
+                nama: "PERTASHOP CV.MITRA NIAGA ABADI",
+                alamat1: "Jl.PANICAN KEDUNG BENDA",
+                alamat2: "PURBALINGGA",
+                telepon: "",
+                labelSelang: "No. Selang",
+                labelBbm: "Jenis BBM",
+                labelHarga: "Harga/Liter",
+                labelLiter: "Jumlah Liter",
+                labelOperator: "Operator",
+                footer1: "TERIMAKASIH & SELAMAT JALAN",
+                footer2: "Ayo Patuhi 5M : Memakai Masker, Mencuci Tangan, Menjaga jarak, Membatasi Kerumunan & Mobilitas",
+                jenis: "Pertamax",
+                harga: 15850,
+                liter: 1.57,
+                uang: 25000,
+                operator: "Operator 1"
+            },
+            spbu: {
+                nama: "SPBU PERTAMINA 34.XXXXX",
+                alamat1: "Jl. Raya Contoh No. 123",
+                alamat2: "KOTA ANDA",
+                telepon: "0281-xxxxxx",
+                labelSelang: "No. Selang",
+                labelBbm: "Jenis BBM",
+                labelHarga: "Harga/Liter",
+                labelLiter: "Jumlah Liter",
+                labelOperator: "Operator",
+                footer1: "TERIMA KASIH ATAS KUNJUNGAN ANDA",
+                footer2: "Selamat Jalan - Hati-hati di jalan",
+                jenis: "Pertalite",
+                harga: 10000,
+                liter: 5.00,
+                uang: 50000,
+                operator: "Kasir 1"
+            },
+            minimarket: {
+                nama: "TOKO MAJU JAYA",
+                alamat1: "Jl. Merdeka No. 45",
+                alamat2: "PURBALINGGA",
+                telepon: "0812-3456-7890",
+                labelSelang: "No. Meja",
+                labelBbm: "Nama Item",
+                labelHarga: "Harga",
+                labelLiter: "Qty",
+                labelOperator: "Kasir",
+                footer1: "TERIMA KASIH TELAH BERBELANJA",
+                footer2: "Barang yang sudah dibeli tidak dapat ditukar/dikembalikan",
+                jenis: "Indomie Goreng",
+                harga: 3500,
+                liter: 2,
+                uang: 7000,
+                operator: "Kasir Ani"
+            }
+        };
+
+        function applyTemplate() {
+            const key = document.getElementById('template').value;
+            const t = templates[key];
+            const isMinimarket = (key === 'minimarket');
+
+            document.getElementById('namaToko').value = t.nama;
+            document.getElementById('alamat1').value = t.alamat1;
+            document.getElementById('alamat2').value = t.alamat2;
+            document.getElementById('telepon').value = t.telepon;
+            document.getElementById('jenisBBM').value = t.jenis;
+            document.getElementById('hargaAngka').value = t.harga;
+            document.getElementById('literAngka').value = t.liter;
+            document.getElementById('uangAngka').value = t.uang;
+            document.getElementById('operator').value = t.operator;
+            document.getElementById('footer1').value = t.footer1;
+            document.getElementById('footer2').value = t.footer2;
+
+            document.getElementById('label-selang').textContent = t.labelSelang;
+            document.getElementById('label-operator').textContent = t.labelOperator;
+
+            // Toggle section fuel vs multi-item
+            document.getElementById('sectionFuel').style.display = isMinimarket ? 'none' : 'block';
+            document.getElementById('sectionItems').style.display = isMinimarket ? 'block' : 'none';
+            document.getElementById('receiptFuel').style.display = isMinimarket ? 'none' : 'block';
+            document.getElementById('receiptItems').style.display = isMinimarket ? 'block' : 'none';
+
+            if (!isMinimarket) {
+                document.getElementById('label-bbm').textContent = t.labelBbm;
+                document.getElementById('label-harga').textContent = t.labelHarga;
+                document.getElementById('label-liter').textContent = t.labelLiter;
+            }
+
+            const nota = document.getElementById('nota');
+            nota.classList.remove('template-minimarket');
+            if (isMinimarket) {
+                nota.classList.add('template-minimarket');
+                // Reset contoh items minimarket
+                items = [
+                    { nama: 'Indomie Goreng', qty: 2, harga: 3500 },
+                    { nama: 'Aqua 600ml', qty: 3, harga: 3000 },
+                    { nama: 'Kopi Kapal Api', qty: 1, harga: 1500 }
+                ];
+                renderItemList();
+            }
+
+            hitungOtomatis();
+            updateNota();
+        }
+
+        function updateNota() {
+            const size = document.getElementById('paperSize').value;
+            const nota = document.getElementById('nota');
+            nota.classList.remove('size-58', 'size-80');
+            nota.classList.add('size-' + size);
+
+            // Font
+            const font = document.getElementById('fontFamily').value;
+            const fsize = document.getElementById('fontSize').value;
+            nota.style.fontFamily = font;
+            nota.style.fontSize = fsize + 'px';
+
+            const showLogo = document.getElementById('showLogo').checked && logoDataUrl;
+
+            const logoArea = document.getElementById('logoArea');
+            if (showLogo) {
+                logoArea.style.display = 'block';
+                document.getElementById('logoImg').src = logoDataUrl;
+            } else {
+                logoArea.style.display = 'none';
+            }
+
+            document.getElementById('v-nama').textContent = document.getElementById('namaToko').value;
+            document.getElementById('v-alamat1').textContent = document.getElementById('alamat1').value;
+            document.getElementById('v-alamat2').textContent = document.getElementById('alamat2').value;
+            document.getElementById('v-telepon').textContent = document.getElementById('telepon').value;
+
+            const input = document.getElementById('inputTanggal').value;
+            if (input) {
+                const date = new Date(input);
+                const hariList = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', "Jum'at", 'Sabtu'];
+                document.getElementById('v-hari').textContent = hariList[date.getDay()];
+                const tgl = String(date.getDate()).padStart(2, '0');
+                const bln = String(date.getMonth() + 1).padStart(2, '0');
+                const thn = date.getFullYear();
+                document.getElementById('v-tanggal').textContent = tgl + '/' + bln + '/' + thn;
+                const jam = String(date.getHours()).padStart(2, '0');
+                const mnt = String(date.getMinutes()).padStart(2, '0');
+                const dtk = String(date.getSeconds()).padStart(2, '0');
+                document.getElementById('v-waktu').textContent = jam + ':' + mnt + ':' + dtk;
+            }
+
+            document.getElementById('v-selang').textContent = document.getElementById('noSelang').value;
+            document.getElementById('v-nota').textContent = document.getElementById('noNota').value;
+            document.getElementById('v-operator').textContent = document.getElementById('operator').value;
+            document.getElementById('v-footer1').textContent = document.getElementById('footer1').value;
+            document.getElementById('v-footer2').innerHTML = document.getElementById('footer2').value.replace(/, /g, ',<br>');
+
+            const isMinimarket = document.getElementById('template').value === 'minimarket';
+            if (isMinimarket) {
+                hitungItems();
+            } else {
+                document.getElementById('v-bbm').textContent = document.getElementById('jenisBBM').value;
+                hitungOtomatis();
+            }
+        }
+
+
+        function resetData() {
+            document.getElementById('template').value = 'pertashop';
+            document.getElementById('paperSize').value = '80';
+            document.getElementById('fontFamily').value = "'Courier New', Courier, monospace";
+            document.getElementById('fontSize').value = '13';
+            document.getElementById('showLogo').checked = true;
+
+            document.getElementById('inputTanggal').value = '2026-08-14T07:33';
+            document.getElementById('noSelang').value = '1';
+            document.getElementById('noNota').value = '3471';
+            logoDataUrl = null;
+            document.getElementById('logoPreview').innerHTML = '<span style="font-size:11px;color:#94a3b8;">Logo</span>';
+            document.getElementById('logoInput').value = '';
+            setMode('liter');
+            setDevice('pc');
+            applyTemplate();
+        }
+
+
+        setMode('liter');
+        hitungOtomatis();
+        updateNota();
+
+        // Register Service Worker (PWA)
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('./sw.js').catch(function(err) {
+                console.log('SW registration failed:', err);
+            });
+        }
+    </script>
+</body>
+</html>
+
