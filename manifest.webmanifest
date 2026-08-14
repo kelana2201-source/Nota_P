@@ -2,7 +2,7 @@
   "name": "Generator Nota SPBU",
   "short_name": "Nota SPBU",
   "description": "Generator nota thermal untuk Pertashop, SPBU, dan Minimarket",
-  "start_url": "./nota-spbu-generator.html",
+  "start_url": "./index.html",
   "display": "standalone",
   "background_color": "#ffffff",
   "theme_color": "#1a3a8a",

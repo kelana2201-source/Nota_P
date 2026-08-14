@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="format-detection" content="telephone=no">
     <title>Generator Nota SPBU / Pertashop / Minimarket</title>
 
     <!-- PWA -->
@@ -22,8 +23,9 @@
     <link rel="apple-touch-icon" sizes="180x180" href="icons/apple-touch-icon.png">
 
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
+        * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
 
+        html { overflow-x: hidden; }
 
         body {
             font-family: 'Segoe UI', Arial, sans-serif;
@@ -32,6 +34,7 @@
             gap: 24px;
             padding: 20px;
             min-height: 100vh;
+            overflow-x: hidden;
         }
 
         .controls {
@@ -77,10 +80,12 @@
         .controls input[type="datetime-local"],
         .controls select {
             width: 100%;
-            padding: 7px 10px;
+            padding: 9px 10px;
             border: 1px solid #cbd5e1;
             border-radius: 6px;
             font-size: 13px;
+            min-height: 40px;
+            touch-action: manipulation;
         }
 
         .controls input:focus, .controls select:focus {
@@ -118,6 +123,8 @@
             text-align: center;
             transition: all 0.2s;
             color: #475569;
+            min-height: 44px;
+            touch-action: manipulation;
         }
         .mode-btn.active {
             border-color: #2563eb;
@@ -141,6 +148,8 @@
             font-size: 13px;
             font-weight: 600;
             color: white;
+            min-height: 44px;
+            touch-action: manipulation;
         }
 
         .btn-update { background: #2563eb; }
@@ -169,6 +178,11 @@
         }
 
         .hint { font-size: 11px; color: #94a3b8; margin-top: 3px; }
+
+        input[type="file"] {
+            font-size: 12px;
+            padding: 8px 0;
+        }
 
         .info-box {
             background: #ecfdf5;
@@ -202,6 +216,7 @@
 
         .receipt.size-58 { width: 220px; font-size: 11.5px; }
         .receipt.size-80 { width: 302px; font-size: 13px; }
+        .receipt { max-width: 92vw; }
         .receipt.size-58 .nama { font-size: 12px; }
         .receipt.size-80 .nama { font-size: 14px; }
 
@@ -232,11 +247,91 @@
 
         .template-minimarket .row .label { width: 95px; }
 
+        /* ===== MOBILE ACTION BAR (hidden on desktop) ===== */
+        .mobile-actionbar {
+            display: none;
+        }
+
+        /* ===== RESPONSIVE / MOBILE LAYOUT ===== */
+        @media (max-width: 860px) {
+            body {
+                flex-direction: column;
+                padding: 12px;
+                gap: 12px;
+                padding-bottom: 90px; /* space for fixed bottom action bar */
+            }
+
+            .receipt-wrapper {
+                order: 1;
+                padding-top: 0;
+                width: 100%;
+            }
+
+            .controls {
+                order: 2;
+                width: 100%;
+                position: static;
+                max-height: none;
+                overflow-y: visible;
+                padding: 16px;
+            }
+
+            /* Prevent iOS Safari auto-zoom on focus (needs >=16px font) */
+            .controls input[type="text"],
+            .controls input[type="number"],
+            .controls input[type="datetime-local"],
+            .controls select {
+                font-size: 16px;
+                min-height: 44px;
+            }
+
+            .controls h2 { font-size: 16px; }
+
+            .row-2 {
+                flex-direction: row; /* keep side-by-side, just narrower */
+            }
+
+            .btn-group {
+                flex-wrap: wrap;
+            }
+
+            /* Fixed bottom action bar for quick access without scrolling */
+            .mobile-actionbar {
+                display: flex;
+                gap: 8px;
+                position: fixed;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                z-index: 100;
+                background: white;
+                padding: 10px 12px calc(10px + env(safe-area-inset-bottom));
+                box-shadow: 0 -4px 16px rgba(0,0,0,0.15);
+            }
+
+            .mobile-actionbar .btn {
+                flex: 1;
+                margin: 0;
+                font-size: 14px;
+                min-height: 46px;
+            }
+
+            /* Original in-panel buttons hidden on mobile; bottom bar replaces them */
+            .controls .btn-group {
+                display: none;
+            }
+        }
+
+        @media (max-width: 380px) {
+            .receipt.size-80 { width: 100%; max-width: 300px; }
+        }
+
         @media print {
             body { background: white; padding: 0; margin: 0; }
             .controls { display: none !important; }
+            .mobile-actionbar { display: none !important; }
             .receipt-wrapper { padding: 0; }
-            .receipt { box-shadow: none !important; margin: 0 auto; }
+            .receipt { box-shadow: none !important; margin: 0 auto; max-width: none; }
             .receipt.size-58 { width: 58mm; }
             .receipt.size-80 { width: 80mm; }
         }
@@ -289,8 +384,8 @@
             <span style="font-size:11px;color:#94a3b8;">Logo</span>
         </div>
         <div class="hint">PNG/JPG transparan lebih bagus</div>
-        <label style="margin-top:8px;">
-            <input type="checkbox" id="showLogo" checked onchange="updateNota()"> Tampilkan Logo
+        <label style="margin-top:8px; display:flex; align-items:center; gap:6px;">
+            <input type="checkbox" id="showLogo" checked onchange="updateNota()" style="width:18px; height:18px;"> Tampilkan Logo
         </label>
 
         <h3>4. Data Toko</h3>
@@ -340,16 +435,16 @@
             </div>
 
             <label>Harga / Liter (angka)</label>
-            <input type="number" id="hargaAngka" value="15850" oninput="hitungOtomatis()">
+            <input type="number" id="hargaAngka" value="15850" inputmode="numeric" oninput="hitungOtomatis()">
 
             <div id="inputLiterGroup">
                 <label>Jumlah Liter</label>
-                <input type="number" id="literAngka" value="1.57" step="0.01" oninput="hitungOtomatis()">
+                <input type="number" id="literAngka" value="1.57" step="0.01" inputmode="decimal" oninput="hitungOtomatis()">
             </div>
 
             <div id="inputUangGroup" style="display:none;">
                 <label>Nominal Uang (yang dibayar)</label>
-                <input type="number" id="uangAngka" value="25000" step="1000" oninput="hitungOtomatis()">
+                <input type="number" id="uangAngka" value="25000" step="1000" inputmode="numeric" oninput="hitungOtomatis()">
             </div>
 
             <label>Total</label>
@@ -372,7 +467,7 @@
 
             <div id="itemList"></div>
 
-            <button type="button" onclick="tambahItem()" style="width:100%; margin-top:8px; padding:9px; background:#2563eb; color:white; border:none; border-radius:6px; font-weight:600; cursor:pointer;">
+            <button type="button" onclick="tambahItem()" style="width:100%; margin-top:8px; padding:12px; min-height:44px; background:#2563eb; color:white; border:none; border-radius:6px; font-weight:600; cursor:pointer; touch-action:manipulation;">
                 + Tambah Item
             </button>
 
@@ -513,6 +608,12 @@
         </div>
     </div>
 
+    <!-- Bottom action bar: only visible on mobile, keeps Update/Cetak reachable without scrolling -->
+    <div class="mobile-actionbar">
+        <button class="btn btn-update" onclick="updateNota()">↻ Update</button>
+        <button class="btn btn-print" id="btnCetakMobile" onclick="cetakSekarang()">🖨 Cetak PC</button>
+    </div>
+
     <script>
         let currentMode = 'liter';
         let currentDevice = 'pc';
@@ -526,12 +627,14 @@
             document.getElementById('infoHP').style.display = device === 'hp' ? 'block' : 'none';
 
             const btn = document.getElementById('btnCetak');
-            if (device === 'pc') {
-                btn.textContent = '🖨 Cetak PC';
-                btn.style.background = '#16a34a';
-            } else {
-                btn.textContent = '📱 Cetak HP';
-                btn.style.background = '#d97706';
+            const btnMobile = document.getElementById('btnCetakMobile');
+            const label = device === 'pc' ? '🖨 Cetak PC' : '📱 Cetak HP';
+            const color = device === 'pc' ? '#16a34a' : '#d97706';
+            btn.textContent = label;
+            btn.style.background = color;
+            if (btnMobile) {
+                btnMobile.textContent = label;
+                btnMobile.style.background = color;
             }
         }
 
@@ -579,18 +682,18 @@
                 div.innerHTML = `
                     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
                         <strong style="font-size:12px;">Item ${idx + 1}</strong>
-                        <button type="button" onclick="hapusItem(${idx})" style="background:#ef4444; color:white; border:none; border-radius:4px; padding:3px 8px; font-size:11px; cursor:pointer;">Hapus</button>
+                        <button type="button" onclick="hapusItem(${idx})" style="background:#ef4444; color:white; border:none; border-radius:4px; padding:6px 12px; font-size:12px; cursor:pointer; min-height:32px;">Hapus</button>
                     </div>
                     <label style="font-size:11px;">Nama Barang</label>
-                    <input type="text" value="${item.nama}" onchange="items[${idx}].nama=this.value; hitungItems();" style="width:100%; padding:5px 8px; margin-bottom:5px; border:1px solid #cbd5e1; border-radius:4px; font-size:12px;">
+                    <input type="text" value="${item.nama}" onchange="items[${idx}].nama=this.value; hitungItems();" style="width:100%; padding:8px; margin-bottom:5px; border:1px solid #cbd5e1; border-radius:4px; font-size:16px; min-height:40px;">
                     <div style="display:flex; gap:8px;">
                         <div style="flex:1;">
                             <label style="font-size:11px;">Qty</label>
-                            <input type="number" value="${item.qty}" min="1" onchange="items[${idx}].qty=parseFloat(this.value)||1; hitungItems();" style="width:100%; padding:5px 8px; border:1px solid #cbd5e1; border-radius:4px; font-size:12px;">
+                            <input type="number" value="${item.qty}" min="1" inputmode="decimal" onchange="items[${idx}].qty=parseFloat(this.value)||1; hitungItems();" style="width:100%; padding:8px; border:1px solid #cbd5e1; border-radius:4px; font-size:16px; min-height:40px;">
                         </div>
                         <div style="flex:1;">
                             <label style="font-size:11px;">Harga</label>
-                            <input type="number" value="${item.harga}" min="0" onchange="items[${idx}].harga=parseFloat(this.value)||0; hitungItems();" style="width:100%; padding:5px 8px; border:1px solid #cbd5e1; border-radius:4px; font-size:12px;">
+                            <input type="number" value="${item.harga}" min="0" inputmode="numeric" onchange="items[${idx}].harga=parseFloat(this.value)||0; hitungItems();" style="width:100%; padding:8px; border:1px solid #cbd5e1; border-radius:4px; font-size:16px; min-height:40px;">
                         </div>
                     </div>
                     <div style="margin-top:5px; font-size:12px; color:#64748b;">

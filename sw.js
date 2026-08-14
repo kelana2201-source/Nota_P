@@ -1,6 +1,6 @@
-const CACHE_NAME = 'nota-spbu-v1';
+const CACHE_NAME = 'nota-spbu-v2';
 const ASSETS = [
-  './nota-spbu-generator.html',
+  './index.html',
   './manifest.webmanifest',
   './icons/icon-192.png',
   './icons/icon-512.png',
