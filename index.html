@@ -345,7 +345,8 @@
         <h3>1. Pilih Template</h3>
         <label>Jenis Usaha</label>
         <select id="template" onchange="applyTemplate()">
-            <option value="pertashop">Pertashop</option>
+            <option value="pertashop">Pertashop (Mitra Niaga Abadi)</option>
+            <option value="pertashop2">Pertashop (Panican - Nomor Pompa)</option>
             <option value="spbu">SPBU Biasa (Pertamina)</option>
             <option value="minimarket">Minimarket / Toko</option>
         </select>
@@ -405,16 +406,34 @@
         <label>Tanggal & Waktu</label>
         <input type="datetime-local" id="inputTanggal" value="2026-08-14T07:33">
 
+        <label>Format Tanggal</label>
+        <select id="formatTanggal" onchange="updateNota()">
+            <option value="numeric">Numerik (14/08/2026 07:33:19)</option>
+            <option value="long">Panjang (Jum'at, 14 Agustus 2026 7:33:19)</option>
+        </select>
+
+        <label style="margin-top:8px;">Nomor Pompa <span style="font-weight:400;color:#94a3b8;">(kosongkan jika tidak perlu)</span></label>
+        <input type="text" id="noPompa" value="" placeholder="mis. 1">
+
         <div class="row-2">
             <div>
-                <label>No. Selang / No.Meja</label>
+                <label id="lbl-noSelang">No. Selang / No.Meja</label>
                 <input type="text" id="noSelang" value="1">
             </div>
             <div>
-                <label>No. Nota</label>
+                <label id="lbl-noNota">No. Nota</label>
                 <input type="text" id="noNota" value="3471">
             </div>
         </div>
+
+        <label style="margin-top:8px; display:flex; align-items:center; gap:6px;">
+            <input type="checkbox" id="autoIncrement" checked style="width:18px; height:18px;">
+            Nomor Nota otomatis +1 setelah cetak
+        </label>
+        <div class="hint">Ketik manual di field No. Nota kapan saja untuk mengganti/reset urutan — nomor berikutnya akan lanjut otomatis dari angka yang kamu ketik. Setiap template punya urutan nomor sendiri-sendiri.</div>
+        <button type="button" onclick="resetCounterOnly()" style="width:100%; margin-top:6px; padding:8px; min-height:38px; background:#f1f5f9; color:#475569; border:1px solid #cbd5e1; border-radius:6px; font-size:12px; cursor:pointer;">
+            ↺ Reset Nomor ke Default Template
+        </button>
 
         <!-- ===== BAGIAN SPBU / PERTASHOP (1 item) ===== -->
         <div id="sectionFuel">
@@ -477,6 +496,9 @@
 
         <label style="margin-top:12px;">Operator / Kasir</label>
         <input type="text" id="operator" value="Operator 1">
+
+        <label style="margin-top:8px;" id="lbl-noPolisi">Nomor Polisi <span style="font-weight:400;color:#94a3b8;">(kosongkan jika tidak perlu)</span></label>
+        <input type="text" id="noPolisi" value="" placeholder="mis. R 1234 ABC">
 
 
         <h3>7. Pesan Footer</h3>
@@ -542,13 +564,18 @@
 
             <div class="separator-double"></div>
 
+            <div class="row" id="row-pompa" style="display:none;">
+                <span class="label">Nomor Pompa</span>
+                <span class="colon">:</span>
+                <span class="value" id="v-pompa"></span>
+            </div>
             <div class="row">
                 <span class="label" id="label-selang">No. Selang</span>
                 <span class="colon">:</span>
                 <span class="value" id="v-selang">1</span>
             </div>
             <div class="row">
-                <span class="label">No. Nota</span>
+                <span class="label" id="label-nota">No. Nota</span>
                 <span class="colon">:</span>
                 <span class="value" id="v-nota">3471</span>
             </div>
@@ -592,6 +619,11 @@
                 <span class="label" id="label-operator">Operator</span>
                 <span class="colon">:</span>
                 <span class="value" id="v-operator">Operator 1</span>
+            </div>
+            <div class="row" id="row-polisi" style="display:none;">
+                <span class="label">Nomor Polisi</span>
+                <span class="colon">:</span>
+                <span class="value" id="v-polisi"></span>
             </div>
 
 
@@ -638,19 +670,102 @@
             }
         }
 
+        // ========== NOMOR NOTA: auto-increment per template, tersimpan di localStorage ==========
+        function counterKey(templateKey) {
+            return 'notaCounter_' + templateKey;
+        }
+
+        // Mengambil nomor nota yang tersimpan untuk template ini, atau null jika belum pernah dipakai
+        function getSavedCounter(templateKey) {
+            try {
+                return localStorage.getItem(counterKey(templateKey));
+            } catch (e) {
+                return null; // localStorage tidak tersedia (mis. private browsing)
+            }
+        }
+
+        function saveCounter(templateKey, value) {
+            try {
+                localStorage.setItem(counterKey(templateKey), value);
+            } catch (e) { /* abaikan jika localStorage tidak tersedia */ }
+        }
+
+        // Naikkan nomor nota +1, mempertahankan panjang digit & angka nol di depan (mis. "007" -> "008")
+        function incrementNotaNumber(current) {
+            const match = current.match(/^(\D*)(\d+)(\D*)$/);
+            if (!match) return current; // bukan format angka biasa, jangan diubah
+            const [, prefix, digits, suffix] = match;
+            const next = (parseInt(digits, 10) + 1).toString().padStart(digits.length, '0');
+            return prefix + next + suffix;
+        }
+
+        function applyAutoIncrementIfNeeded() {
+            if (!document.getElementById('autoIncrement').checked) return;
+            const templateKey = document.getElementById('template').value;
+            const field = document.getElementById('noNota');
+            const nextValue = incrementNotaNumber(field.value);
+            field.value = nextValue;
+            saveCounter(templateKey, nextValue);
+            updateNota();
+        }
+
+        // Tombol reset manual: hapus progres tersimpan & kembali ke nomor default template
+        function resetCounterOnly() {
+            const templateKey = document.getElementById('template').value;
+            try { localStorage.removeItem(counterKey(templateKey)); } catch (e) {}
+            document.getElementById('noNota').value = getTemplateDefaultNota(templateKey);
+            updateNota();
+        }
+
+        function getTemplateDefaultNota(templateKey) {
+            // Nomor nota default per template (nilai awal sebelum ada progres tersimpan)
+            const defaults = { pertashop: '3471', pertashop2: '119', spbu: '00125', minimarket: '00087' };
+            return defaults[templateKey] || '1';
+        }
+
+        // Simpan nilai No. Nota setiap kali diketik manual, supaya urutan berikutnya lanjut dari situ
+        document.addEventListener('DOMContentLoaded', function () {
+            const notaField = document.getElementById('noNota');
+            if (notaField) {
+                notaField.addEventListener('change', function () {
+                    saveCounter(document.getElementById('template').value, notaField.value);
+                });
+            }
+        });
+
+        let sedangCetak = false; // mencegah klik ganda memicu 2x cetak dengan nomor sama
+
         function cetakSekarang() {
+            // Cegah klik dobel/berulang cepat: nomor hanya boleh dipakai sekali per proses cetak
+            if (sedangCetak) return;
+            sedangCetak = true;
+
+            const btnPC = document.getElementById('btnCetak');
+            const btnHP = document.getElementById('btnCetakMobile');
+            if (btnPC) btnPC.disabled = true;
+            if (btnHP) btnHP.disabled = true;
+
             if (currentDevice === 'pc') {
                 window.print();
             } else {
-                // Mode HP: coba Web Share API dulu, fallback ke print
                 if (navigator.share) {
-                    // Buat teks nota untuk di-share (opsional)
                     alert('Untuk hasil terbaik di HP Android:\n\n1. Install aplikasi RawBT\n2. Hubungkan printer Bluetooth\n3. Di Chrome ketuk ⋮ → Share → RawBT\n\nAtau tekan OK untuk tetap memakai Print biasa.');
                     window.print();
                 } else {
                     window.print();
                 }
             }
+
+            // Nomor nota yang baru saja dicetak dianggap "terpakai" begitu proses cetak dipicu,
+            // supaya klik Cetak berikutnya tidak bisa lagi memakai nomor yang sama —
+            // tidak menunggu event 'afterprint' karena tidak selalu terdeteksi di HP/RawBT.
+            applyAutoIncrementIfNeeded();
+
+            setTimeout(function () {
+                sedangCetak = false;
+                if (btnPC) btnPC.disabled = false;
+                if (btnHP) btnHP.disabled = false;
+            }, 1200);
         }
 
 
@@ -803,6 +918,7 @@
                 alamat2: "PURBALINGGA",
                 telepon: "",
                 labelSelang: "No. Selang",
+                labelNota: "No. Nota",
                 labelBbm: "Jenis BBM",
                 labelHarga: "Harga/Liter",
                 labelLiter: "Jumlah Liter",
@@ -813,7 +929,32 @@
                 harga: 15850,
                 liter: 1.57,
                 uang: 25000,
-                operator: "Operator 1"
+                operator: "Operator 1",
+                noPompa: "",
+                noPolisi: "",
+                dateFormat: "numeric"
+            },
+            pertashop2: {
+                nama: "PERTASHOP PANICAN",
+                alamat1: "JL.Raya Panican RT 10/RW 03",
+                alamat2: "Desa Panican Kec.Kemangkon Purbalingga",
+                telepon: "0813 1745 1939",
+                labelSelang: "Nomor Selang",
+                labelNota: "Nomor Nota",
+                labelBbm: "Jenis BBM",
+                labelHarga: "Harga/liter",
+                labelLiter: "Liter",
+                labelOperator: "Operator",
+                footer1: "PREMIUM hanya untuk Golongan Tidak Mampu",
+                footer2: "Terimakasih dan Selamat jalan",
+                jenis: "Pertamax",
+                harga: 15850,
+                liter: 1.577,
+                uang: 25000,
+                operator: "Bayu",
+                noPompa: "1",
+                noPolisi: "INPUT",
+                dateFormat: "long"
             },
             spbu: {
                 nama: "SPBU PERTAMINA 34.XXXXX",
@@ -821,6 +962,7 @@
                 alamat2: "KOTA ANDA",
                 telepon: "0281-xxxxxx",
                 labelSelang: "No. Selang",
+                labelNota: "No. Nota",
                 labelBbm: "Jenis BBM",
                 labelHarga: "Harga/Liter",
                 labelLiter: "Jumlah Liter",
@@ -831,7 +973,10 @@
                 harga: 10000,
                 liter: 5.00,
                 uang: 50000,
-                operator: "Kasir 1"
+                operator: "Kasir 1",
+                noPompa: "",
+                noPolisi: "",
+                dateFormat: "numeric"
             },
             minimarket: {
                 nama: "TOKO MAJU JAYA",
@@ -839,6 +984,7 @@
                 alamat2: "PURBALINGGA",
                 telepon: "0812-3456-7890",
                 labelSelang: "No. Meja",
+                labelNota: "No. Nota",
                 labelBbm: "Nama Item",
                 labelHarga: "Harga",
                 labelLiter: "Qty",
@@ -849,7 +995,10 @@
                 harga: 3500,
                 liter: 2,
                 uang: 7000,
-                operator: "Kasir Ani"
+                operator: "Kasir Ani",
+                noPompa: "",
+                noPolisi: "",
+                dateFormat: "numeric"
             }
         };
 
@@ -869,8 +1018,16 @@
             document.getElementById('operator').value = t.operator;
             document.getElementById('footer1').value = t.footer1;
             document.getElementById('footer2').value = t.footer2;
+            document.getElementById('noPompa').value = t.noPompa || '';
+            document.getElementById('noPolisi').value = t.noPolisi || '';
+            document.getElementById('formatTanggal').value = t.dateFormat || 'numeric';
+
+            // Nomor Nota: lanjutkan dari progres tersimpan untuk template ini, atau pakai default
+            const savedNota = getSavedCounter(key);
+            document.getElementById('noNota').value = savedNota !== null ? savedNota : getTemplateDefaultNota(key);
 
             document.getElementById('label-selang').textContent = t.labelSelang;
+            document.getElementById('label-nota').textContent = t.labelNota;
             document.getElementById('label-operator').textContent = t.labelOperator;
 
             // Toggle section fuel vs multi-item
@@ -930,18 +1087,47 @@
             document.getElementById('v-telepon').textContent = document.getElementById('telepon').value;
 
             const input = document.getElementById('inputTanggal').value;
+            const dateFmt = document.getElementById('formatTanggal').value;
             if (input) {
                 const date = new Date(input);
                 const hariList = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', "Jum'at", 'Sabtu'];
+                const bulanList = ['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
                 document.getElementById('v-hari').textContent = hariList[date.getDay()];
-                const tgl = String(date.getDate()).padStart(2, '0');
-                const bln = String(date.getMonth() + 1).padStart(2, '0');
-                const thn = date.getFullYear();
-                document.getElementById('v-tanggal').textContent = tgl + '/' + bln + '/' + thn;
                 const jam = String(date.getHours()).padStart(2, '0');
                 const mnt = String(date.getMinutes()).padStart(2, '0');
                 const dtk = String(date.getSeconds()).padStart(2, '0');
-                document.getElementById('v-waktu').textContent = jam + ':' + mnt + ':' + dtk;
+
+                if (dateFmt === 'long') {
+                    // Format: Sabtu. 15 Agustus 2026 7:29:26 (jam tanpa leading zero, dipisah titik setelah hari)
+                    document.getElementById('v-hari').textContent = hariList[date.getDay()] + '.';
+                    document.getElementById('v-tanggal').textContent = date.getDate() + ' ' + bulanList[date.getMonth()] + ' ' + date.getFullYear();
+                    document.getElementById('v-waktu').textContent = date.getHours() + ':' + mnt + ':' + dtk;
+                } else {
+                    document.getElementById('v-hari').textContent = hariList[date.getDay()];
+                    const tgl = String(date.getDate()).padStart(2, '0');
+                    const bln = String(date.getMonth() + 1).padStart(2, '0');
+                    document.getElementById('v-tanggal').textContent = tgl + '/' + bln + '/' + date.getFullYear();
+                    document.getElementById('v-waktu').textContent = jam + ':' + mnt + ':' + dtk;
+                }
+            }
+
+            // Nomor Pompa & Nomor Polisi: optional, hanya tampil jika diisi
+            const pompa = document.getElementById('noPompa').value.trim();
+            const rowPompa = document.getElementById('row-pompa');
+            if (pompa) {
+                rowPompa.style.display = 'flex';
+                document.getElementById('v-pompa').textContent = pompa;
+            } else {
+                rowPompa.style.display = 'none';
+            }
+
+            const polisi = document.getElementById('noPolisi').value.trim();
+            const rowPolisi = document.getElementById('row-polisi');
+            if (polisi) {
+                rowPolisi.style.display = 'flex';
+                document.getElementById('v-polisi').textContent = polisi;
+            } else {
+                rowPolisi.style.display = 'none';
             }
 
             document.getElementById('v-selang').textContent = document.getElementById('noSelang').value;
@@ -968,8 +1154,12 @@
             document.getElementById('showLogo').checked = true;
 
             document.getElementById('inputTanggal').value = '2026-08-14T07:33';
+            document.getElementById('formatTanggal').value = 'numeric';
             document.getElementById('noSelang').value = '1';
             document.getElementById('noNota').value = '3471';
+            document.getElementById('noPompa').value = '';
+            document.getElementById('noPolisi').value = '';
+            document.getElementById('autoIncrement').checked = true;
             logoDataUrl = null;
             document.getElementById('logoPreview').innerHTML = '<span style="font-size:11px;color:#94a3b8;">Logo</span>';
             document.getElementById('logoInput').value = '';
@@ -980,6 +1170,16 @@
 
 
         setMode('liter');
+
+        // Saat pertama kali dibuka: lanjutkan nomor nota dari progres tersimpan (jika ada) untuk template default
+        (function initNotaCounter() {
+            const key = document.getElementById('template').value;
+            const saved = getSavedCounter(key);
+            if (saved !== null) {
+                document.getElementById('noNota').value = saved;
+            }
+        })();
+
         hitungOtomatis();
         updateNota();
 
