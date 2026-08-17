@@ -207,18 +207,20 @@
             background: white;
             padding: 18px 16px;
             box-shadow: 0 6px 25px rgba(0,0,0,0.12);
-            font-family: 'Courier New', Courier, monospace;
+            font-family: 'Courier New', Courier, 'Lucida Console', Consolas, monospace;
             font-size: 13px;
-            line-height: 1.4;
-            color: #111;
+            font-weight: 600; /* thermal printer butuh kontras tebal, font tipis jadi buram/pucat saat dicetak */
+            line-height: 1.45;
+            color: #000;
             transition: width 0.3s;
+            -webkit-font-smoothing: none;
         }
 
-        .receipt.size-58 { width: 220px; font-size: 11.5px; }
-        .receipt.size-80 { width: 302px; font-size: 13px; }
+        .receipt.size-58 { width: 220px; font-size: 12.5px; }
+        .receipt.size-80 { width: 302px; font-size: 14px; }
         .receipt { max-width: 92vw; }
-        .receipt.size-58 .nama { font-size: 12px; }
-        .receipt.size-80 .nama { font-size: 14px; }
+        .receipt.size-58 .nama { font-size: 13.5px; }
+        .receipt.size-80 .nama { font-size: 15.5px; }
 
         .center { text-align: center; }
         .bold { font-weight: bold; }
