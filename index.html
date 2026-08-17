@@ -336,6 +336,9 @@
             .receipt.size-80 { width: 80mm; }
         }
     </style>
+    <!-- Diisi otomatis oleh JS sebelum cetak, supaya sistem Android/print service tahu lebar kertas yang benar
+         (tanpa ini, printer dianggap kertas A4/Letter dan nota jadi kecil di pojok halaman) -->
+    <style id="dynamicPageSize"></style>
 </head>
 <body>
 
@@ -735,6 +738,16 @@
 
         let sedangCetak = false; // mencegah klik ganda memicu 2x cetak dengan nomor sama
 
+        // Beritahu browser/print service ukuran kertas yang benar (58mm atau 80mm) sebelum mencetak.
+        // Tanpa ini, Android/print service (mis. Thermer) akan pakai ukuran default A4/Letter,
+        // sehingga nota tampil kecil di pojok kertas besar alih-alih memenuhi lebar kertas thermal.
+        function setPrintPageSize() {
+            const size = document.getElementById('paperSize').value; // '58' atau '80'
+            const widthMm = size === '58' ? 58 : 80;
+            document.getElementById('dynamicPageSize').textContent =
+                '@page { size: ' + widthMm + 'mm auto; margin: 0; }';
+        }
+
         function cetakSekarang() {
             // Cegah klik dobel/berulang cepat: nomor hanya boleh dipakai sekali per proses cetak
             if (sedangCetak) return;
@@ -745,11 +758,13 @@
             if (btnPC) btnPC.disabled = true;
             if (btnHP) btnHP.disabled = true;
 
+            setPrintPageSize();
+
             if (currentDevice === 'pc') {
                 window.print();
             } else {
                 if (navigator.share) {
-                    alert('Untuk hasil terbaik di HP Android:\n\n1. Install aplikasi RawBT\n2. Hubungkan printer Bluetooth\n3. Di Chrome ketuk ⋮ → Share → RawBT\n\nAtau tekan OK untuk tetap memakai Print biasa.');
+                    alert('Tips cetak di HP Android:\n\n• Kalau printer sudah muncul sebagai "Printer" pilihan langsung (mis. lewat app Thermer), pilih itu di dialog cetak lalu pastikan Ukuran Kertas di dialog cetak sesuai (58mm/80mm).\n\n• Kalau belum, install RawBT lalu di dialog Share pilih RawBT.\n\nTekan OK untuk lanjut.');
                     window.print();
                 } else {
                     window.print();
