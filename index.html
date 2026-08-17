@@ -252,8 +252,8 @@
             display: none;
         }
 
-        /* ===== RESPONSIVE / MOBILE LAYOUT ===== */
-        @media (max-width: 860px) {
+        /* ===== RESPONSIVE / MOBILE LAYOUT (khusus tampilan layar, tidak berlaku saat cetak) ===== */
+        @media screen and (max-width: 860px) {
             body {
                 flex-direction: column;
                 padding: 12px;
@@ -322,16 +322,30 @@
             }
         }
 
-        @media (max-width: 380px) {
+        @media screen and (max-width: 380px) {
             .receipt.size-80 { width: 100%; max-width: 300px; }
         }
 
         @media print {
+            /* Teknik isolasi cetak yang lebih kuat: sembunyikan SEMUA elemen dulu,
+               baru tampilkan khusus struk (#nota) dan seluruh isinya.
+               Ini lebih tahan terhadap bug display:none yang kadang tidak konsisten
+               di berbagai browser/WebView printer Android. */
+            body * {
+                visibility: hidden !important;
+            }
+            #nota, #nota * {
+                visibility: visible !important;
+            }
+            #nota {
+                position: absolute !important;
+                left: 0 !important;
+                top: 0 !important;
+                margin: 0 !important;
+                box-shadow: none !important;
+                max-width: none !important;
+            }
             body { background: white; padding: 0; margin: 0; }
-            .controls { display: none !important; }
-            .mobile-actionbar { display: none !important; }
-            .receipt-wrapper { padding: 0; }
-            .receipt { box-shadow: none !important; margin: 0 auto; max-width: none; }
             .receipt.size-58 { width: 58mm; }
             .receipt.size-80 { width: 80mm; }
         }
@@ -339,6 +353,7 @@
     <!-- Diisi otomatis oleh JS sebelum cetak, supaya sistem Android/print service tahu lebar kertas yang benar
          (tanpa ini, printer dianggap kertas A4/Letter dan nota jadi kecil di pojok halaman) -->
     <style id="dynamicPageSize"></style>
+    <script src="./html2canvas.min.js"></script>
 </head>
 <body>
 
@@ -534,8 +549,15 @@
         <div id="infoHP" class="info-box" style="display:none; background:#fef3c7; border-color:#fcd34d; color:#92400e;">
             <strong>Cetak dari HP:</strong><br>
             1. Pairing printer via Bluetooth<br>
-            2. Disarankan pakai aplikasi <b>RawBT</b><br>
-            3. Klik <b>Cetak HP</b> → Share ke RawBT / Print
+            2. Tekan <b>📤 Bagikan sebagai Gambar</b> di bawah (cara paling akurat, ukuran otomatis pas dengan kertas roll)<br>
+            3. Pilih RawBT / Thermer dari menu Share<br>
+            <span style="opacity:0.8;">(Tombol "Cetak HP" pakai dialog print Android — kadang ukuran kertasnya dipaksa A4 oleh sistem, jadi kalau itu gagal, pakai cara Bagikan Gambar di atas)</span>
+        </div>
+
+        <div id="shareImageSection" style="display:none;">
+            <button type="button" id="btnShareImage" onclick="bagikanSebagaiGambar()" style="width:100%; margin-top:10px; padding:12px; min-height:46px; background:#7c3aed; color:white; border:none; border-radius:7px; font-weight:600; font-size:14px; cursor:pointer; touch-action:manipulation;">
+                📤 Bagikan sebagai Gambar (untuk RawBT/Thermer)
+            </button>
         </div>
 
         <div class="btn-group" style="margin-top:12px;">
@@ -647,6 +669,7 @@
     <div class="mobile-actionbar">
         <button class="btn btn-update" onclick="updateNota()">↻ Update</button>
         <button class="btn btn-print" id="btnCetakMobile" onclick="cetakSekarang()">🖨 Cetak PC</button>
+        <button class="btn" id="btnShareImageMobile" onclick="bagikanSebagaiGambar()" style="display:none; background:#7c3aed;">📤 Gambar</button>
     </div>
 
     <script>
@@ -660,6 +683,9 @@
             document.getElementById('deviceHP').classList.toggle('active', device === 'hp');
             document.getElementById('infoPC').style.display = device === 'pc' ? 'block' : 'none';
             document.getElementById('infoHP').style.display = device === 'hp' ? 'block' : 'none';
+            document.getElementById('shareImageSection').style.display = device === 'hp' ? 'block' : 'none';
+            const btnShareMobile = document.getElementById('btnShareImageMobile');
+            if (btnShareMobile) btnShareMobile.style.display = device === 'hp' ? 'block' : 'none';
 
             const btn = document.getElementById('btnCetak');
             const btnMobile = document.getElementById('btnCetakMobile');
@@ -783,6 +809,74 @@
             }, 1200);
         }
 
+
+        // ========== BAGIKAN SEBAGAI GAMBAR ==========
+        // Cara ini menghindari masalah "ukuran kertas dipaksa A4" dari dialog print Android,
+        // karena gambar nota langsung dikirim ke app printer (RawBT/Thermer) lewat menu Share,
+        // yang otomatis menyesuaikan ke lebar kertas roll — tanpa lewat sistem Print Framework.
+        async function bagikanSebagaiGambar() {
+            if (sedangCetak) return;
+            sedangCetak = true;
+            const btnShare = document.getElementById('btnShareImage');
+            const btnShareM = document.getElementById('btnShareImageMobile');
+            if (btnShare) { btnShare.disabled = true; btnShare.textContent = '⏳ Memproses...'; }
+            if (btnShareM) { btnShareM.disabled = true; btnShareM.textContent = '⏳...'; }
+
+            try {
+                const nota = document.getElementById('nota');
+                const canvas = await html2canvas(nota, {
+                    backgroundColor: '#ffffff',
+                    scale: 3, // resolusi tinggi supaya hasil cetak tajam
+                    useCORS: true
+                });
+
+                canvas.toBlob(async function (blob) {
+                    if (!blob) {
+                        alert('Gagal membuat gambar nota. Coba lagi.');
+                        resetShareButton();
+                        return;
+                    }
+                    const fileName = 'nota-' + document.getElementById('noNota').value + '.png';
+                    const file = new File([blob], fileName, { type: 'image/png' });
+
+                    if (navigator.canShare && navigator.canShare({ files: [file] })) {
+                        try {
+                            await navigator.share({ files: [file], title: 'Nota' });
+                        } catch (err) {
+                            if (err.name !== 'AbortError') {
+                                alert('Gagal membagikan: ' + err.message);
+                            }
+                        }
+                    } else {
+                        // Fallback untuk browser yang belum dukung Web Share API dengan file
+                        const url = URL.createObjectURL(blob);
+                        const a = document.createElement('a');
+                        a.href = url;
+                        a.download = fileName;
+                        document.body.appendChild(a);
+                        a.click();
+                        document.body.removeChild(a);
+                        setTimeout(function () { URL.revokeObjectURL(url); }, 3000);
+                        alert('Browser ini belum mendukung Share langsung.\n\nGambar nota sudah diunduh — buka dari galeri/file manager, lalu bagikan (Share) ke RawBT atau Thermer secara manual.');
+                    }
+
+                    applyAutoIncrementIfNeeded();
+                    resetShareButton();
+                }, 'image/png');
+
+            } catch (err) {
+                alert('Gagal membuat gambar nota: ' + err.message);
+                resetShareButton();
+            }
+        }
+
+        function resetShareButton() {
+            sedangCetak = false;
+            const btnShare = document.getElementById('btnShareImage');
+            const btnShareM = document.getElementById('btnShareImageMobile');
+            if (btnShare) { btnShare.disabled = false; btnShare.textContent = '📤 Bagikan sebagai Gambar (untuk RawBT/Thermer)'; }
+            if (btnShareM) { btnShareM.disabled = false; btnShareM.textContent = '📤 Gambar'; }
+        }
 
         function formatRupiah(angka) {
             return 'Rp ' + Math.round(angka).toLocaleString('id-ID') + ',-';

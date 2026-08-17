@@ -1,7 +1,8 @@
-const CACHE_NAME = 'nota-spbu-v2';
+const CACHE_NAME = 'nota-spbu-v3';
 const ASSETS = [
   './index.html',
   './manifest.webmanifest',
+  './html2canvas.min.js',
   './icons/icon-192.png',
   './icons/icon-512.png',
   './icons/apple-touch-icon.png',
