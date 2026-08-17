@@ -22,6 +22,11 @@
     <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
     <link rel="apple-touch-icon" sizes="180x180" href="icons/apple-touch-icon.png">
 
+    <!-- Font mirip thermal printer / struk -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=IBM+Plex+Mono:wght@400;500;600;700&family=Roboto+Mono:wght@400;500;600;700&family=Source+Code+Pro:wght@400;500;600;700&family=Inconsolata:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
 
@@ -207,13 +212,14 @@
             background: white;
             padding: 18px 16px;
             box-shadow: 0 6px 25px rgba(0,0,0,0.12);
-            font-family: 'Courier New', Courier, 'Lucida Console', Consolas, monospace;
+            font-family: 'Share Tech Mono', 'Courier New', Courier, monospace;
             font-size: 13px;
-            font-weight: 600; /* thermal printer butuh kontras tebal, font tipis jadi buram/pucat saat dicetak */
+            font-weight: 500; /* thermal printer butuh kontras tebal, font tipis jadi buram/pucat saat dicetak */
             line-height: 1.45;
             color: #000;
             transition: width 0.3s;
             -webkit-font-smoothing: none;
+            letter-spacing: 0.01em;
         }
 
         .receipt.size-58 { width: 220px; font-size: 12.5px; }
@@ -231,23 +237,216 @@
         .header .nama { font-weight: bold; letter-spacing: 0.2px; line-height: 1.25; }
         .header .alamat { font-size: 0.92em; margin-top: 1px; }
 
-        .datetime { margin: 7px 0 3px; font-size: 0.95em; }
+        /* ===== GARIS PEMISAH (penuh kiri-kanan, mirip thermal) ===== */
+        .sep {
+            border: none;
+            margin: 6px 0;
+            padding: 0;
+            text-align: left;
+            font-weight: 400;
+            letter-spacing: 0;
+            line-height: 1;
+            overflow: hidden;
+            white-space: nowrap;
+            min-height: 0;
+            width: 100%;
+        }
+        .sep-none {
+            display: none !important;
+            margin: 0 !important;
+            min-height: 0 !important;
+        }
+        /* Putus-putus: karakter mengisi penuh lebar */
+        .sep-dashed::before {
+            content: "- - - - - - - - - - - - - - - - - - - - - - - - - - - - - -";
+            display: block;
+            width: 100%;
+            overflow: hidden;
+            font-size: 0.95em;
+            letter-spacing: 0.02em;
+        }
+        /* Single ==== penuh kiri-kanan */
+        .sep-single::before {
+            content: "================================================";
+            display: block;
+            width: 100%;
+            overflow: hidden;
+            font-size: 0.95em;
+            letter-spacing: -0.3px;
+        }
+        /* Double ==== x2 penuh kiri-kanan */
+        .sep-double::before {
+            content: "================================================\A================================================";
+            white-space: pre;
+            display: block;
+            width: 100%;
+            overflow: hidden;
+            font-size: 0.9em;
+            line-height: 1.05;
+            letter-spacing: -0.3px;
+        }
+        /* Solid garis penuh */
+        .sep-solid {
+            border-top: 1.5px solid #000;
+            margin: 7px 0;
+            width: 100%;
+        }
+        .sep-solid::before { content: none; }
 
-        .separator { border-top: 1px dashed #333; margin: 8px 0; }
-        .separator-double { border-top: 2px solid #222; margin: 7px 0; }
+        /* 58mm: karakter disesuaikan */
+        .receipt.size-58 .sep-dashed::before {
+            content: "- - - - - - - - - - - - - - - - - - - -";
+        }
+        .receipt.size-58 .sep-single::before {
+            content: "====================================";
+        }
+        .receipt.size-58 .sep-double::before {
+            content: "====================================\A====================================";
+        }
 
-        .row { display: flex; margin: 2px 0; }
+        .datetime {
+            margin: 7px 0 3px;
+            font-size: 0.95em;
+            display: flex;
+            justify-content: center;
+            gap: 0.85em;          /* jarak antar hari - tanggal - jam (mirip struk asli) */
+            white-space: nowrap;
+            letter-spacing: 0.02em;
+        }
+        .datetime span {
+            display: inline-block;
+        }
+        .receipt.size-58 .datetime {
+            gap: 0.55em;
+            font-size: 0.9em;
+        }
+
+        .row {
+            display: flex;
+            margin: 2px 0;
+            align-items: baseline; /* titik dua selalu sejajar antar baris */
+        }
         .row .label { width: 105px; flex-shrink: 0; }
         .receipt.size-58 .row .label { width: 85px; }
-        .row .colon { width: 12px; flex-shrink: 0; }
+        .row .colon {
+            width: 14px;
+            flex-shrink: 0;
+            text-align: center;
+            font-size: 1em !important;   /* titik dua tidak ikut membesar */
+            font-weight: 400 !important;
+            transform: none !important;
+            letter-spacing: normal !important;
+        }
         .row .value { flex: 1; }
 
-        .total-row { font-size: 1.15em; font-weight: bold; margin: 5px 0 3px; }
+        .total-row {
+            font-size: 1.15em;
+            font-weight: bold;
+            margin: 5px 0 3px;
+            align-items: baseline;
+        }
+        /* Saat Total diperbesar, hanya label & value yang membesar, titik dua tetap */
+        .total-row .label,
+        .total-row .value {
+            /* diisi via JS */
+        }
 
-        .footer { margin-top: 9px; text-align: center; font-size: 0.92em; }
-        .footer .pesan { margin-top: 8px; font-size: 0.85em; line-height: 1.5; }
+        .footer {
+            margin-top: 9px;
+            text-align: left;
+            font-size: 0.92em;
+            width: 100%;
+        }
+        .footer .pesan {
+            margin-top: 5px;
+            font-size: 0.85em;
+            line-height: 1.4;
+            text-align: left;
+            width: 100%;
+            word-wrap: break-word;
+            white-space: pre-wrap;   /* hormati Enter, wrap alami untuk teks panjang */
+        }
+        .footer .bold {
+            display: block;
+            text-align: left;
+            width: 100%;
+            margin-bottom: 2px;
+        }
 
         .template-minimarket .row .label { width: 95px; }
+
+        /* ===== LINE STYLE CONTROLS UI ===== */
+        .line-style-box {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 8px 10px;
+            margin-bottom: 8px;
+        }
+        .line-style-title {
+            font-size: 12px;
+            font-weight: 700;
+            color: #334155;
+            margin-bottom: 6px;
+        }
+        .line-style-controls {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px 10px;
+            align-items: center;
+        }
+        .line-style-controls select {
+            width: auto;
+            min-width: 110px;
+            padding: 5px 8px;
+            font-size: 12px;
+            min-height: 32px;
+        }
+        .line-style-controls .chk {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            font-size: 11px;
+            font-weight: 500;
+            color: #475569;
+            margin: 0;
+            white-space: nowrap;
+        }
+        .line-style-controls .chk input {
+            width: 15px;
+            height: 15px;
+            margin: 0;
+        }
+
+        .btn-master {
+            flex: 1;
+            padding: 8px 6px;
+            border: 1px solid #cbd5e1;
+            border-radius: 6px;
+            background: #f1f5f9;
+            color: #334155;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            min-height: 36px;
+            touch-action: manipulation;
+        }
+        .btn-master:hover { background: #e2e8f0; }
+        .btn-master.btn-danger {
+            background: #fef2f2;
+            color: #b91c1c;
+            border-color: #fecaca;
+        }
+        .btn-master.btn-danger:hover { background: #fee2e2; }
+
+        /* Tinggi & Lebar — diterapkan ke teks, bukan ke seluruh baris (agar titik dua tetap lurus) */
+        .style-tall {
+            line-height: 1.1;
+            /* font-size sudah di-set via JS, ini hanya bantu visual tinggi */
+        }
+        .style-wide {
+            letter-spacing: 0.06em;
+        }
 
         /* ===== MOBILE ACTION BAR (hidden on desktop) ===== */
         .mobile-actionbar {
@@ -362,6 +561,20 @@
     <div class="controls">
         <h2>🧾 Generator Nota SPBU</h2>
 
+        <!-- Mode switch -->
+        <div class="mode-box" style="margin-bottom:12px;">
+            <div class="mode-btn active" id="modeTemplate" onclick="setAppMode('template')">
+                📋 Template Siap<br>
+                <small style="font-weight:400">Pertashop / SPBU</small>
+            </div>
+            <div class="mode-btn" id="modeFree" onclick="setAppMode('free')">
+                ✏️ Editor Bebas<br>
+                <small style="font-weight:400">Buat struk baru</small>
+            </div>
+        </div>
+
+        <!-- ===== MODE TEMPLATE ===== -->
+        <div id="panelTemplate">
         <h3>1. Pilih Template</h3>
         <label>Jenis Usaha</label>
         <select id="template" onchange="applyTemplate()">
@@ -371,6 +584,61 @@
             <option value="minimarket">Minimarket / Toko</option>
         </select>
 
+        <!-- ===== MASTER DATA ===== -->
+        <h3>1b. Master Data</h3>
+        <div class="hint" style="margin-bottom:8px;">Simpan data toko, BBM, dan operator agar bisa dipilih saat buat struk baru</div>
+
+        <!-- Master Toko -->
+        <div class="line-style-box">
+            <div class="line-style-title">🏪 Master Toko</div>
+            <label>Pilih Toko Tersimpan</label>
+            <select id="masterTokoSelect" onchange="loadMasterToko()">
+                <option value="">— Pilih toko —</option>
+            </select>
+            <div class="row-2" style="margin-top:6px;">
+                <button type="button" class="btn-master" onclick="saveMasterToko()">💾 Simpan Toko Saat Ini</button>
+                <button type="button" class="btn-master btn-danger" onclick="deleteMasterToko()">🗑 Hapus</button>
+            </div>
+        </div>
+
+        <!-- Master BBM -->
+        <div class="line-style-box">
+            <div class="line-style-title">⛽ Master BBM / Produk</div>
+            <label>Pilih BBM</label>
+            <select id="masterBbmSelect" onchange="loadMasterBbm()">
+                <option value="">— Pilih BBM —</option>
+            </select>
+            <div class="row-2" style="margin-top:6px;">
+                <div>
+                    <label style="margin-top:0;">Nama BBM</label>
+                    <input type="text" id="masterBbmNama" placeholder="mis. Pertamax" style="min-height:36px;">
+                </div>
+                <div>
+                    <label style="margin-top:0;">Harga/Liter</label>
+                    <input type="number" id="masterBbmHarga" placeholder="15850" style="min-height:36px;">
+                </div>
+            </div>
+            <div class="row-2" style="margin-top:6px;">
+                <button type="button" class="btn-master" onclick="saveMasterBbm()">💾 Simpan BBM</button>
+                <button type="button" class="btn-master btn-danger" onclick="deleteMasterBbm()">🗑 Hapus</button>
+            </div>
+        </div>
+
+        <!-- Master Operator -->
+        <div class="line-style-box">
+            <div class="line-style-title">👤 Master Operator</div>
+            <label>Pilih Operator</label>
+            <select id="masterOpSelect" onchange="loadMasterOp()">
+                <option value="">— Pilih operator —</option>
+            </select>
+            <label>Nama Operator Baru</label>
+            <input type="text" id="masterOpNama" placeholder="mis. Operator 1" style="min-height:36px;">
+            <div class="row-2" style="margin-top:6px;">
+                <button type="button" class="btn-master" onclick="saveMasterOp()">💾 Simpan Operator</button>
+                <button type="button" class="btn-master btn-danger" onclick="deleteMasterOp()">🗑 Hapus</button>
+            </div>
+        </div>
+
         <h3>2. Ukuran Kertas & Font</h3>
         <label>Lebar Kertas Thermal</label>
         <select id="paperSize" onchange="updateNota()">
@@ -378,23 +646,206 @@
             <option value="58">58 mm (Kecil)</option>
         </select>
 
-        <label>Font Nota</label>
+        <label>Font Nota (Global)</label>
         <select id="fontFamily" onchange="updateNota()">
-            <option value="'Courier New', Courier, monospace">Courier New (Mirip Thermal)</option>
+            <option value="'Courier New', Courier, monospace">Courier New (Klasik Thermal)</option>
+            <option value="'Share Tech Mono', 'Courier New', monospace" selected>Share Tech Mono ★ (Mirip Struk)</option>
+            <option value="'IBM Plex Mono', 'Courier New', monospace">IBM Plex Mono</option>
+            <option value="'Roboto Mono', 'Courier New', monospace">Roboto Mono</option>
+            <option value="'Source Code Pro', 'Courier New', monospace">Source Code Pro</option>
+            <option value="'Inconsolata', 'Courier New', monospace">Inconsolata</option>
+            <option value="'Space Mono', 'Courier New', monospace">Space Mono</option>
             <option value="'Lucida Console', Monaco, monospace">Lucida Console</option>
             <option value="'Consolas', 'Courier New', monospace">Consolas</option>
+            <option value="'DejaVu Sans Mono', 'Courier New', monospace">DejaVu Sans Mono</option>
+            <option value="monospace">System Monospace</option>
             <option value="Arial, Helvetica, sans-serif">Arial (Modern)</option>
+            <option value="'Segoe UI', Tahoma, sans-serif">Segoe UI</option>
+            <option value="'Tahoma', Geneva, sans-serif">Tahoma</option>
             <option value="'Times New Roman', Times, serif">Times New Roman</option>
-            <option value="Verdana, Geneva, sans-serif">Verdana</option>
         </select>
 
-        <label>Ukuran Font</label>
+        <label>Ukuran Font Dasar</label>
         <select id="fontSize" onchange="updateNota()">
             <option value="11">Kecil (11px)</option>
             <option value="12">Sedang (12px)</option>
             <option value="13" selected>Normal (13px)</option>
             <option value="14">Besar (14px)</option>
             <option value="15">Sangat Besar (15px)</option>
+            <option value="16">Ekstra Besar (16px)</option>
+        </select>
+
+        <!-- ===== PENGATURAN PER BARIS ===== -->
+        <h3>2b. Gaya Huruf per Baris</h3>
+        <div class="hint" style="margin-bottom:8px;">Atur ukuran, tebal, tinggi & lebar tiap bagian struk</div>
+
+        <div class="line-style-box">
+            <div class="line-style-title">Nama Toko</div>
+            <div class="line-style-controls">
+                <select id="styleNamaSize" onchange="applyLineStyles()">
+                    <option value="1">Normal</option>
+                    <option value="1.15" selected>Sedikit Besar</option>
+                    <option value="1.3">Besar</option>
+                    <option value="1.5">Sangat Besar</option>
+                    <option value="1.8">Raksasa</option>
+                </select>
+                <select id="styleNamaAlign" onchange="applyLineStyles()" title="Perataan teks">
+                    <option value="left">Rata Kiri</option>
+                    <option value="center" selected>Tengah</option>
+                    <option value="right">Rata Kanan</option>
+                </select>
+                <label class="chk"><input type="checkbox" id="styleNamaBold" checked onchange="applyLineStyles()"> Tebal</label>
+                <label class="chk"><input type="checkbox" id="styleNamaTall" onchange="applyLineStyles()"> Tinggi</label>
+                <label class="chk"><input type="checkbox" id="styleNamaWide" onchange="applyLineStyles()"> Lebar</label>
+            </div>
+        </div>
+
+        <div class="line-style-box">
+            <div class="line-style-title">Alamat & Telepon</div>
+            <div class="line-style-controls">
+                <select id="styleAlamatSize" onchange="applyLineStyles()">
+                    <option value="0.85">Kecil</option>
+                    <option value="0.92" selected>Normal</option>
+                    <option value="1">Sedikit Besar</option>
+                    <option value="1.15">Besar</option>
+                </select>
+                <select id="styleAlamatAlign" onchange="applyLineStyles()" title="Perataan teks">
+                    <option value="left">Rata Kiri</option>
+                    <option value="center" selected>Tengah</option>
+                    <option value="right">Rata Kanan</option>
+                </select>
+                <label class="chk"><input type="checkbox" id="styleAlamatBold" onchange="applyLineStyles()"> Tebal</label>
+                <label class="chk"><input type="checkbox" id="styleAlamatTall" onchange="applyLineStyles()"> Tinggi</label>
+                <label class="chk"><input type="checkbox" id="styleAlamatWide" onchange="applyLineStyles()"> Lebar</label>
+            </div>
+        </div>
+
+        <div class="line-style-box">
+            <div class="line-style-title">Tanggal & Waktu</div>
+            <div class="line-style-controls">
+                <select id="styleTglSize" onchange="applyLineStyles()">
+                    <option value="0.9">Kecil</option>
+                    <option value="0.95" selected>Normal</option>
+                    <option value="1.1">Besar</option>
+                    <option value="1.25">Sangat Besar</option>
+                </select>
+                <select id="styleTglAlign" onchange="applyLineStyles()" title="Perataan teks">
+                    <option value="left">Rata Kiri</option>
+                    <option value="center" selected>Tengah</option>
+                    <option value="right">Rata Kanan</option>
+                </select>
+                <label class="chk"><input type="checkbox" id="styleTglBold" onchange="applyLineStyles()"> Tebal</label>
+                <label class="chk"><input type="checkbox" id="styleTglTall" onchange="applyLineStyles()"> Tinggi</label>
+                <label class="chk"><input type="checkbox" id="styleTglWide" onchange="applyLineStyles()"> Lebar</label>
+            </div>
+        </div>
+
+        <div class="line-style-box">
+            <div class="line-style-title">Detail (No.Selang, Nota, BBM...)</div>
+            <div class="line-style-controls">
+                <select id="styleDetailSize" onchange="applyLineStyles()">
+                    <option value="0.9">Kecil</option>
+                    <option value="1" selected>Normal</option>
+                    <option value="1.1">Besar</option>
+                    <option value="1.25">Sangat Besar</option>
+                </select>
+                <label class="chk"><input type="checkbox" id="styleDetailBold" onchange="applyLineStyles()"> Tebal</label>
+                <label class="chk"><input type="checkbox" id="styleDetailTall" onchange="applyLineStyles()"> Tinggi</label>
+                <label class="chk"><input type="checkbox" id="styleDetailWide" onchange="applyLineStyles()"> Lebar</label>
+            </div>
+        </div>
+
+        <div class="line-style-box" style="border-color:#f59e0b;">
+            <div class="line-style-title" style="color:#b45309;">★ Total (paling penting)</div>
+            <div class="line-style-controls">
+                <select id="styleTotalSize" onchange="applyLineStyles()">
+                    <option value="1">Normal</option>
+                    <option value="1.15" selected>Sedikit Besar</option>
+                    <option value="1.3">Besar</option>
+                    <option value="1.5">Sangat Besar</option>
+                    <option value="1.8">Raksasa</option>
+                    <option value="2.0">Super Besar</option>
+                </select>
+                <label class="chk"><input type="checkbox" id="styleTotalBold" checked onchange="applyLineStyles()"> Tebal</label>
+                <label class="chk"><input type="checkbox" id="styleTotalTall" onchange="applyLineStyles()"> Tinggi</label>
+                <label class="chk"><input type="checkbox" id="styleTotalWide" onchange="applyLineStyles()"> Lebar</label>
+            </div>
+        </div>
+
+        <div class="line-style-box">
+            <div class="line-style-title">Operator / Kasir</div>
+            <div class="line-style-controls">
+                <select id="styleOpSize" onchange="applyLineStyles()">
+                    <option value="0.9">Kecil</option>
+                    <option value="1" selected>Normal</option>
+                    <option value="1.1">Besar</option>
+                    <option value="1.25">Sangat Besar</option>
+                </select>
+                <label class="chk"><input type="checkbox" id="styleOpBold" onchange="applyLineStyles()"> Tebal</label>
+                <label class="chk"><input type="checkbox" id="styleOpTall" onchange="applyLineStyles()"> Tinggi</label>
+                <label class="chk"><input type="checkbox" id="styleOpWide" onchange="applyLineStyles()"> Lebar</label>
+            </div>
+        </div>
+
+        <div class="line-style-box">
+            <div class="line-style-title">Footer (Terima Kasih & Pesan)</div>
+            <div class="line-style-controls">
+                <select id="styleFooterSize" onchange="applyLineStyles()">
+                    <option value="0.8">Kecil</option>
+                    <option value="0.92" selected>Normal</option>
+                    <option value="1.05">Besar</option>
+                    <option value="1.2">Sangat Besar</option>
+                </select>
+                <select id="styleFooterAlign" onchange="applyLineStyles()" title="Perataan teks">
+                    <option value="left" selected>Rata Kiri</option>
+                    <option value="center">Tengah</option>
+                    <option value="right">Rata Kanan</option>
+                    <option value="justify">Rata Kiri-Kanan</option>
+                </select>
+                <label class="chk"><input type="checkbox" id="styleFooterBold" onchange="applyLineStyles()"> Tebal</label>
+                <label class="chk"><input type="checkbox" id="styleFooterTall" onchange="applyLineStyles()"> Tinggi</label>
+                <label class="chk"><input type="checkbox" id="styleFooterWide" onchange="applyLineStyles()"> Lebar</label>
+            </div>
+        </div>
+
+        <!-- ===== PENGATURAN GARIS ===== -->
+        <h3>2c. Pengaturan Garis</h3>
+        <div class="hint" style="margin-bottom:8px;">Pilih jenis garis di tiap posisi struk</div>
+
+        <label>Setelah Tanggal</label>
+        <select id="sepAfterDateType" onchange="applySeparators()">
+            <option value="none">Tidak ada</option>
+            <option value="dashed">Putus-putus ( - - - )</option>
+            <option value="single">Single ( ==== )</option>
+            <option value="double" selected>Double ( ==== x2 )</option>
+            <option value="solid">Garis solid</option>
+        </select>
+
+        <label>Sebelum Total</label>
+        <select id="sepBeforeTotalType" onchange="applySeparators()">
+            <option value="none" selected>Tidak ada</option>
+            <option value="dashed">Putus-putus ( - - - )</option>
+            <option value="single">Single ( ==== )</option>
+            <option value="double">Double ( ==== x2 )</option>
+            <option value="solid">Garis solid</option>
+        </select>
+
+        <label>Setelah Total</label>
+        <select id="sepAfterTotalType" onchange="applySeparators()">
+            <option value="none">Tidak ada</option>
+            <option value="dashed">Putus-putus ( - - - )</option>
+            <option value="single" selected>Single ( ==== )</option>
+            <option value="double">Double ( ==== x2 )</option>
+            <option value="solid">Garis solid</option>
+        </select>
+
+        <label>Sebelum Footer</label>
+        <select id="sepBeforeFooterType" onchange="applySeparators()">
+            <option value="none">Tidak ada</option>
+            <option value="dashed">Putus-putus ( - - - )</option>
+            <option value="single">Single ( ==== )</option>
+            <option value="double" selected>Double ( ==== x2 )</option>
+            <option value="solid">Garis solid</option>
         </select>
 
         <h3>3. Logo</h3>
@@ -411,20 +862,20 @@
 
         <h3>4. Data Toko</h3>
         <label>Nama Toko / SPBU</label>
-        <input type="text" id="namaToko" value="PERTASHOP CV.MITRA NIAGA ABADI">
+        <input type="text" id="namaToko" value="PERTASHOP CV.MITRA NIAGA ABADI" oninput="updateNota()">
 
         <label>Alamat Baris 1</label>
-        <input type="text" id="alamat1" value="Jl.PANICAN KEDUNG BENDA">
+        <input type="text" id="alamat1" value="Jl.PANICAN KEDUNG BENDA" oninput="updateNota()">
 
         <label>Alamat Baris 2</label>
-        <input type="text" id="alamat2" value="PURBALINGGA">
+        <input type="text" id="alamat2" value="PURBALINGGA" oninput="updateNota()">
 
         <label>No. Telepon</label>
-        <input type="text" id="telepon" value="">
+        <input type="text" id="telepon" value="" oninput="updateNota()">
 
         <h3>5. Tanggal & Transaksi</h3>
         <label>Tanggal & Waktu</label>
-        <input type="datetime-local" id="inputTanggal" value="2026-08-14T07:33">
+        <input type="datetime-local" id="inputTanggal" value="2026-08-14T07:33" oninput="updateNota()">
 
         <label>Format Tanggal</label>
         <select id="formatTanggal" onchange="updateNota()">
@@ -433,16 +884,16 @@
         </select>
 
         <label style="margin-top:8px;">Nomor Pompa <span style="font-weight:400;color:#94a3b8;">(kosongkan jika tidak perlu)</span></label>
-        <input type="text" id="noPompa" value="" placeholder="mis. 1">
+        <input type="text" id="noPompa" value="" placeholder="mis. 1" oninput="updateNota()">
 
         <div class="row-2">
             <div>
                 <label id="lbl-noSelang">No. Selang / No.Meja</label>
-                <input type="text" id="noSelang" value="1">
+                <input type="text" id="noSelang" value="1" oninput="updateNota()">
             </div>
             <div>
                 <label id="lbl-noNota">No. Nota</label>
-                <input type="text" id="noNota" value="3471">
+                <input type="text" id="noNota" value="3471" oninput="updateNota()">
             </div>
         </div>
 
@@ -458,7 +909,7 @@
         <!-- ===== BAGIAN SPBU / PERTASHOP (1 item) ===== -->
         <div id="sectionFuel">
             <label>Jenis BBM</label>
-            <input type="text" id="jenisBBM" value="Pertamax">
+            <input type="text" id="jenisBBM" value="Pertamax" oninput="updateNota()">
 
             <h3>6. Cara Beli (Pilih Mode)</h3>
             
@@ -474,16 +925,16 @@
             </div>
 
             <label>Harga / Liter (angka)</label>
-            <input type="number" id="hargaAngka" value="15850" inputmode="numeric" oninput="hitungOtomatis()">
+            <input type="number" id="hargaAngka" value="15850" inputmode="numeric" oninput="hitungOtomatis(); updateNota()">
 
             <div id="inputLiterGroup">
                 <label>Jumlah Liter</label>
-                <input type="number" id="literAngka" value="1.57" step="0.01" inputmode="decimal" oninput="hitungOtomatis()">
+                <input type="number" id="literAngka" value="1.57" step="0.01" inputmode="decimal" oninput="hitungOtomatis(); updateNota()">
             </div>
 
             <div id="inputUangGroup" style="display:none;">
                 <label>Nominal Uang (yang dibayar)</label>
-                <input type="number" id="uangAngka" value="25000" step="1000" inputmode="numeric" oninput="hitungOtomatis()">
+                <input type="number" id="uangAngka" value="25000" step="1000" inputmode="numeric" oninput="hitungOtomatis(); updateNota()">
             </div>
 
             <label>Total</label>
@@ -515,17 +966,17 @@
         </div>
 
         <label style="margin-top:12px;">Operator / Kasir</label>
-        <input type="text" id="operator" value="Operator 1">
+        <input type="text" id="operator" value="Operator 1" oninput="updateNota()">
 
         <label style="margin-top:8px;" id="lbl-noPolisi">Nomor Polisi <span style="font-weight:400;color:#94a3b8;">(kosongkan jika tidak perlu)</span></label>
-        <input type="text" id="noPolisi" value="" placeholder="mis. R 1234 ABC">
+        <input type="text" id="noPolisi" value="" placeholder="mis. R 1234 ABC" oninput="updateNota()">
 
 
         <h3>7. Pesan Footer</h3>
         <label>Baris 1</label>
-        <input type="text" id="footer1" value="TERIMAKASIH & SELAMAT JALAN">
-        <label>Baris 2 (pesan)</label>
-        <input type="text" id="footer2" value="Ayo Patuhi 5M : Memakai Masker, Mencuci Tangan, Menjaga jarak, Membatasi Kerumunan & Mobilitas">
+        <input type="text" id="footer1" value="TERIMAKASIH & SELAMAT JALAN" oninput="updateNota()">
+        <label>Baris 2 (pesan) — Enter = baris baru</label>
+        <textarea id="footer2" rows="3" oninput="updateNota()" style="width:100%;padding:9px 10px;border:1px solid #cbd5e1;border-radius:6px;font-size:13px;font-family:inherit;resize:vertical;min-height:70px;">Ayo Patuhi 5M : Memakai Masker, Mencuci Tangan, Menjaga jarak, Membatasi Kerumunan & Mobilitas</textarea>
 
         <!-- PILIH PERANGKAT CETAK -->
         <h3>8. Cetak dari Perangkat</h3>
@@ -562,6 +1013,35 @@
             </button>
         </div>
 
+        </div><!-- end panelTemplate -->
+
+        <!-- ===== MODE EDITOR BEBAS ===== -->
+        <div id="panelFree" style="display:none;">
+            <h3>Editor Bebas — Susun Struk</h3>
+            <div class="hint" style="margin-bottom:10px;">Tambah elemen satu per satu seperti di aplikasi receipt builder</div>
+
+            <div class="line-style-box" style="margin-bottom:10px;">
+                <div class="line-style-title">Tambah Elemen</div>
+                <div style="display:flex; flex-wrap:wrap; gap:6px;">
+                    <button type="button" class="btn-master" onclick="freeAddBlock('text')">📝 Teks</button>
+                    <button type="button" class="btn-master" onclick="freeAddBlock('leftright')">↔ Kiri-Kanan</button>
+                    <button type="button" class="btn-master" onclick="freeAddBlock('line')">━ Garis</button>
+                    <button type="button" class="btn-master" onclick="freeAddBlock('space')">↕ Spasi</button>
+                </div>
+            </div>
+
+            <div id="freeBlockList"></div>
+
+            <div class="row-2" style="margin-top:10px;">
+                <button type="button" class="btn-master" onclick="freeLoadFromTemplate()">📋 Ambil dari Template</button>
+                <button type="button" class="btn-master btn-danger" onclick="freeClearAll()">🗑 Kosongkan</button>
+            </div>
+
+            <div class="info-box" style="margin-top:10px;">
+                Tip: klik ↑ ↓ untuk urutkan, 🗑 hapus. Perubahan langsung tampil di preview.
+            </div>
+        </div>
+
         <div class="btn-group" style="margin-top:12px;">
             <button class="btn btn-update" onclick="updateNota()">↻ Update</button>
             <button class="btn btn-print" id="btnCetak" onclick="cetakSekarang()">🖨 Cetak PC</button>
@@ -572,6 +1052,11 @@
 
     <div class="receipt-wrapper">
         <div class="receipt size-80" id="nota">
+            <!-- Konten mode Editor Bebas -->
+            <div id="notaFree" style="display:none;"></div>
+
+            <!-- Konten mode Template -->
+            <div id="notaTemplate">
             <div class="logo-area" id="logoArea" style="display:none;">
                 <img id="logoImg" src="" alt="Logo">
             </div>
@@ -589,7 +1074,7 @@
                 <span id="v-waktu">07:33:19</span>
             </div>
 
-            <div class="separator-double"></div>
+            <div class="sep sep-double" id="sepAfterDate"></div>
 
             <div class="row" id="row-pompa" style="display:none;">
                 <span class="label">Nomor Pompa</span>
@@ -632,7 +1117,8 @@
                 <div id="v-items"></div>
             </div>
 
-            <div class="separator"></div>
+            <!-- Garis sebelum Total (default: tidak ada) -->
+            <div class="sep sep-none" id="sepBeforeTotal"></div>
 
             <div class="row total-row">
                 <span class="label">Total</span>
@@ -640,7 +1126,8 @@
                 <span class="value" id="v-total">Rp 24.885,-</span>
             </div>
 
-            <div class="separator"></div>
+            <!-- Garis setelah Total (default: single) -->
+            <div class="sep sep-single" id="sepAfterTotal"></div>
 
             <div class="row">
                 <span class="label" id="label-operator">Operator</span>
@@ -653,17 +1140,14 @@
                 <span class="value" id="v-polisi"></span>
             </div>
 
-
-            <div class="separator-double"></div>
+            <!-- Garis sebelum Footer (default: double) -->
+            <div class="sep sep-double" id="sepBeforeFooter"></div>
 
             <div class="footer">
                 <div class="bold" id="v-footer1">TERIMAKASIH & SELAMAT JALAN</div>
-                <div class="pesan" id="v-footer2">
-                    Ayo Patuhi 5M : Memakai Masker,<br>
-                    Mencuci Tangan, Menjaga jarak,<br>
-                    Membatasi Kerumunan & Mobilitas
-                </div>
+                <div class="pesan" id="v-footer2">Ayo Patuhi 5M : Memakai Masker, Mencuci Tangan, Menjaga jarak, Membatasi Kerumunan & Mobilitas</div>
             </div>
+            </div><!-- end notaTemplate -->
         </div>
     </div>
 
@@ -825,8 +1309,12 @@
             if (btnShareM) { btnShareM.disabled = true; btnShareM.textContent = '⏳...'; }
 
             try {
+                // Ambil bagian yang sedang aktif (template atau editor bebas)
                 const nota = document.getElementById('nota');
-                const canvas = await html2canvas(nota, {
+                const target = (typeof appMode !== 'undefined' && appMode === 'free')
+                    ? (document.getElementById('notaFree') || nota)
+                    : (document.getElementById('notaTemplate') || nota);
+                const canvas = await html2canvas(target, {
                     backgroundColor: '#ffffff',
                     scale: 3, // resolusi tinggi supaya hasil cetak tajam
                     useCORS: true
@@ -1245,7 +1733,12 @@
             document.getElementById('v-nota').textContent = document.getElementById('noNota').value;
             document.getElementById('v-operator').textContent = document.getElementById('operator').value;
             document.getElementById('v-footer1').textContent = document.getElementById('footer1').value;
-            document.getElementById('v-footer2').innerHTML = document.getElementById('footer2').value.replace(/, /g, ',<br>');
+            // Jangan paksa baris baru di setiap koma (biar tidak menumpuk).
+            // Hormati Enter dari user; selain itu teks wrap alami.
+            const footer2Raw = document.getElementById('footer2').value;
+            const footer2El = document.getElementById('v-footer2');
+            footer2El.style.whiteSpace = 'pre-wrap';
+            footer2El.textContent = footer2Raw;
 
             const isMinimarket = document.getElementById('template').value === 'minimarket';
             if (isMinimarket) {
@@ -1254,13 +1747,577 @@
                 document.getElementById('v-bbm').textContent = document.getElementById('jenisBBM').value;
                 hitungOtomatis();
             }
+
+            // Terapkan gaya per baris & garis
+            applyLineStyles();
+            applySeparators();
         }
 
+        // ========== MODE APLIKASI: template | free ==========
+        let appMode = 'template';
+        let freeBlocks = [];
+
+        function setAppMode(mode) {
+            appMode = mode;
+            document.getElementById('modeTemplate').classList.toggle('active', mode === 'template');
+            document.getElementById('modeFree').classList.toggle('active', mode === 'free');
+            document.getElementById('panelTemplate').style.display = mode === 'template' ? 'block' : 'none';
+            document.getElementById('panelFree').style.display = mode === 'free' ? 'block' : 'none';
+            document.getElementById('notaTemplate').style.display = mode === 'template' ? 'block' : 'none';
+            document.getElementById('notaFree').style.display = mode === 'free' ? 'block' : 'none';
+            if (mode === 'free') {
+                renderFreeBlockList();
+                renderFreeNota();
+            } else {
+                updateNota();
+            }
+        }
+
+        function freeAddBlock(type) {
+            const block = { id: Date.now() + Math.random(), type: type };
+            if (type === 'text') {
+                block.text = 'Teks baru';
+                block.align = 'center';
+                block.bold = false;
+                block.size = '1';
+            } else if (type === 'leftright') {
+                block.left = 'Label';
+                block.right = 'Nilai';
+                block.bold = false;
+                block.size = '1';
+            } else if (type === 'line') {
+                block.style = 'single'; // none|dashed|single|double|solid
+            } else if (type === 'space') {
+                block.height = '8';
+            }
+            freeBlocks.push(block);
+            renderFreeBlockList();
+            renderFreeNota();
+        }
+
+        function freeDeleteBlock(id) {
+            freeBlocks = freeBlocks.filter(function (b) { return b.id !== id; });
+            renderFreeBlockList();
+            renderFreeNota();
+        }
+
+        function freeMoveBlock(id, dir) {
+            const i = freeBlocks.findIndex(function (b) { return b.id === id; });
+            if (i < 0) return;
+            const j = i + dir;
+            if (j < 0 || j >= freeBlocks.length) return;
+            const tmp = freeBlocks[i];
+            freeBlocks[i] = freeBlocks[j];
+            freeBlocks[j] = tmp;
+            renderFreeBlockList();
+            renderFreeNota();
+        }
+
+        function freeUpdateBlock(id, field, value) {
+            const b = freeBlocks.find(function (x) { return x.id === id; });
+            if (!b) return;
+            b[field] = value;
+            renderFreeNota();
+        }
+
+        function freeClearAll() {
+            if (!confirm('Kosongkan semua elemen?')) return;
+            freeBlocks = [];
+            renderFreeBlockList();
+            renderFreeNota();
+        }
+
+        function freeLoadFromTemplate() {
+            // Ambil data form saat ini sebagai starting point
+            freeBlocks = [];
+            const nama = document.getElementById('namaToko').value;
+            const a1 = document.getElementById('alamat1').value;
+            const a2 = document.getElementById('alamat2').value;
+            const tel = document.getElementById('telepon').value;
+            freeBlocks.push({ id: Date.now()+1, type:'text', text: nama, align:'center', bold:true, size:'1.15' });
+            if (a1) freeBlocks.push({ id: Date.now()+2, type:'text', text: a1, align:'center', bold:false, size:'0.92' });
+            if (a2) freeBlocks.push({ id: Date.now()+3, type:'text', text: a2, align:'center', bold:false, size:'0.92' });
+            if (tel) freeBlocks.push({ id: Date.now()+4, type:'text', text: 'Tlp: ' + tel, align:'center', bold:false, size:'0.92' });
+            freeBlocks.push({ id: Date.now()+5, type:'line', style:'double' });
+            freeBlocks.push({ id: Date.now()+6, type:'leftright', left:'No. Selang', right: document.getElementById('noSelang').value, bold:false, size:'1' });
+            freeBlocks.push({ id: Date.now()+7, type:'leftright', left:'No. Nota', right: document.getElementById('noNota').value, bold:false, size:'1' });
+            freeBlocks.push({ id: Date.now()+8, type:'leftright', left:'Jenis BBM', right: document.getElementById('jenisBBM').value, bold:false, size:'1' });
+            freeBlocks.push({ id: Date.now()+9, type:'leftright', left:'Harga/Liter', right: document.getElementById('v-harga').textContent, bold:false, size:'1' });
+            freeBlocks.push({ id: Date.now()+10, type:'leftright', left:'Jumlah Liter', right: document.getElementById('v-liter').textContent, bold:false, size:'1' });
+            freeBlocks.push({ id: Date.now()+11, type:'leftright', left:'Total', right: document.getElementById('v-total').textContent, bold:true, size:'1.3' });
+            freeBlocks.push({ id: Date.now()+12, type:'line', style:'single' });
+            freeBlocks.push({ id: Date.now()+13, type:'leftright', left:'Operator', right: document.getElementById('operator').value, bold:false, size:'1' });
+            freeBlocks.push({ id: Date.now()+14, type:'line', style:'double' });
+            freeBlocks.push({ id: Date.now()+15, type:'text', text: document.getElementById('footer1').value, align:'center', bold:true, size:'0.95' });
+            freeBlocks.push({ id: Date.now()+16, type:'text', text: document.getElementById('footer2').value, align:'center', bold:false, size:'0.85' });
+            renderFreeBlockList();
+            renderFreeNota();
+            alert('Template berhasil dimuat ke Editor Bebas. Silakan edit sesuka hati.');
+        }
+
+        function renderFreeBlockList() {
+            const box = document.getElementById('freeBlockList');
+            if (!box) return;
+            if (freeBlocks.length === 0) {
+                box.innerHTML = '<div class="hint" style="padding:12px;text-align:center;">Belum ada elemen. Tekan tombol di atas untuk menambah.</div>';
+                return;
+            }
+            let html = '';
+            freeBlocks.forEach(function (b, idx) {
+                const typeLabel = { text:'Teks', leftright:'Kiri-Kanan', line:'Garis', space:'Spasi' }[b.type] || b.type;
+                html += '<div class="line-style-box" style="margin-bottom:8px;">';
+                html += '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">';
+                html += '<strong style="font-size:12px;">' + (idx+1) + '. ' + typeLabel + '</strong>';
+                html += '<div style="display:flex;gap:4px;">';
+                html += '<button type="button" class="btn-master" style="flex:none;padding:4px 8px;min-height:28px;" onclick="freeMoveBlock(' + b.id + ',-1)">↑</button>';
+                html += '<button type="button" class="btn-master" style="flex:none;padding:4px 8px;min-height:28px;" onclick="freeMoveBlock(' + b.id + ',1)">↓</button>';
+                html += '<button type="button" class="btn-master btn-danger" style="flex:none;padding:4px 8px;min-height:28px;" onclick="freeDeleteBlock(' + b.id + ')">🗑</button>';
+                html += '</div></div>';
+
+                if (b.type === 'text') {
+                    html += '<input type="text" value="' + escAttr(b.text) + '" oninput="freeUpdateBlock(' + b.id + ',\'text\',this.value)" style="margin-bottom:4px;">';
+                    html += '<div class="line-style-controls">';
+                    html += '<select onchange="freeUpdateBlock(' + b.id + ',\'align\',this.value)" style="min-width:90px;">';
+                    html += '<option value="left"' + (b.align==='left'?' selected':'') + '>Kiri</option>';
+                    html += '<option value="center"' + (b.align==='center'?' selected':'') + '>Tengah</option>';
+                    html += '<option value="right"' + (b.align==='right'?' selected':'') + '>Kanan</option>';
+                    html += '</select>';
+                    html += '<select onchange="freeUpdateBlock(' + b.id + ',\'size\',this.value)" style="min-width:80px;">';
+                    ['0.8','0.9','1','1.15','1.3','1.5'].forEach(function(s){
+                        html += '<option value="'+s+'"'+(b.size===s?' selected':'')+'>'+s+'x</option>';
+                    });
+                    html += '</select>';
+                    html += '<label class="chk"><input type="checkbox"'+(b.bold?' checked':'')+' onchange="freeUpdateBlock(' + b.id + ',\'bold\',this.checked)"> Tebal</label>';
+                    html += '</div>';
+                } else if (b.type === 'leftright') {
+                    html += '<div class="row-2" style="margin-bottom:4px;">';
+                    html += '<input type="text" value="' + escAttr(b.left) + '" oninput="freeUpdateBlock(' + b.id + ',\'left\',this.value)" placeholder="Kiri">';
+                    html += '<input type="text" value="' + escAttr(b.right) + '" oninput="freeUpdateBlock(' + b.id + ',\'right\',this.value)" placeholder="Kanan">';
+                    html += '</div>';
+                    html += '<div class="line-style-controls">';
+                    html += '<select onchange="freeUpdateBlock(' + b.id + ',\'size\',this.value)" style="min-width:80px;">';
+                    ['0.8','0.9','1','1.15','1.3','1.5'].forEach(function(s){
+                        html += '<option value="'+s+'"'+(b.size===s?' selected':'')+'>'+s+'x</option>';
+                    });
+                    html += '</select>';
+                    html += '<label class="chk"><input type="checkbox"'+(b.bold?' checked':'')+' onchange="freeUpdateBlock(' + b.id + ',\'bold\',this.checked)"> Tebal</label>';
+                    html += '</div>';
+                } else if (b.type === 'line') {
+                    html += '<select onchange="freeUpdateBlock(' + b.id + ',\'style\',this.value)">';
+                    [['dashed','Putus-putus'],['single','Single ===='],['double','Double'],['solid','Solid']].forEach(function(o){
+                        html += '<option value="'+o[0]+'"'+(b.style===o[0]?' selected':'')+'>'+o[1]+'</option>';
+                    });
+                    html += '</select>';
+                } else if (b.type === 'space') {
+                    html += '<label>Tinggi (px)</label>';
+                    html += '<input type="number" value="'+b.height+'" min="2" max="40" oninput="freeUpdateBlock(' + b.id + ',\'height\',this.value)" style="min-height:36px;">';
+                }
+                html += '</div>';
+            });
+            box.innerHTML = html;
+        }
+
+        function escAttr(s) {
+            return String(s || '').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;');
+        }
+
+        function renderFreeNota() {
+            const box = document.getElementById('notaFree');
+            if (!box) return;
+            let html = '';
+            freeBlocks.forEach(function (b) {
+                if (b.type === 'text') {
+                    const align = b.align || 'center';
+                    const weight = b.bold ? '700' : '400';
+                    const size = b.size || '1';
+                    html += '<div style="text-align:'+align+';font-weight:'+weight+';font-size:'+size+'em;margin:2px 0;word-break:break-word;">' + escHtml(b.text) + '</div>';
+                } else if (b.type === 'leftright') {
+                    const weight = b.bold ? '700' : '400';
+                    const size = b.size || '1';
+                    html += '<div class="row" style="font-size:'+size+'em;font-weight:'+weight+';">';
+                    html += '<span class="label">' + escHtml(b.left) + '</span>';
+                    html += '<span class="colon">:</span>';
+                    html += '<span class="value">' + escHtml(b.right) + '</span>';
+                    html += '</div>';
+                } else if (b.type === 'line') {
+                    html += '<div class="sep sep-' + (b.style || 'single') + '"></div>';
+                } else if (b.type === 'space') {
+                    html += '<div style="height:' + (b.height || 8) + 'px;"></div>';
+                }
+            });
+            if (!html) html = '<div style="text-align:center;color:#94a3b8;padding:20px 0;font-size:12px;">Struk kosong — tambah elemen di panel kiri</div>';
+            box.innerHTML = html;
+        }
+
+        function escHtml(s) {
+            return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+        }
+
+        // ========== MASTER DATA (localStorage) ==========
+        const MASTER_TOKO_KEY = 'masterTokoList';
+        const MASTER_BBM_KEY  = 'masterBbmList';
+        const MASTER_OP_KEY   = 'masterOpList';
+
+        function loadJson(key, fallback) {
+            try {
+                const raw = localStorage.getItem(key);
+                return raw ? JSON.parse(raw) : fallback;
+            } catch (e) { return fallback; }
+        }
+        function saveJson(key, data) {
+            try { localStorage.setItem(key, JSON.stringify(data)); } catch (e) {}
+        }
+
+        // ---- Master Toko ----
+        function refreshMasterTokoSelect() {
+            const list = loadJson(MASTER_TOKO_KEY, []);
+            const sel = document.getElementById('masterTokoSelect');
+            if (!sel) return;
+            const current = sel.value;
+            sel.innerHTML = '<option value="">— Pilih toko —</option>';
+            list.forEach(function (t, i) {
+                const opt = document.createElement('option');
+                opt.value = i;
+                opt.textContent = t.nama || ('Toko ' + (i + 1));
+                sel.appendChild(opt);
+            });
+            if (current !== '') sel.value = current;
+        }
+        function saveMasterToko() {
+            const nama = document.getElementById('namaToko').value.trim();
+            if (!nama) { alert('Nama toko masih kosong'); return; }
+            const data = {
+                nama: nama,
+                alamat1: document.getElementById('alamat1').value,
+                alamat2: document.getElementById('alamat2').value,
+                telepon: document.getElementById('telepon').value,
+                footer1: document.getElementById('footer1').value,
+                footer2: document.getElementById('footer2').value
+            };
+            const list = loadJson(MASTER_TOKO_KEY, []);
+            const idx = list.findIndex(function (t) { return t.nama === nama; });
+            if (idx >= 0) list[idx] = data;
+            else list.push(data);
+            saveJson(MASTER_TOKO_KEY, list);
+            refreshMasterTokoSelect();
+            alert('Toko "' + nama + '" tersimpan');
+        }
+        function loadMasterToko() {
+            const sel = document.getElementById('masterTokoSelect');
+            const list = loadJson(MASTER_TOKO_KEY, []);
+            const i = parseInt(sel.value, 10);
+            if (isNaN(i) || !list[i]) return;
+            const t = list[i];
+            document.getElementById('namaToko').value = t.nama || '';
+            document.getElementById('alamat1').value = t.alamat1 || '';
+            document.getElementById('alamat2').value = t.alamat2 || '';
+            document.getElementById('telepon').value = t.telepon || '';
+            if (t.footer1) document.getElementById('footer1').value = t.footer1;
+            if (t.footer2) document.getElementById('footer2').value = t.footer2;
+            updateNota();
+        }
+        function deleteMasterToko() {
+            const sel = document.getElementById('masterTokoSelect');
+            const list = loadJson(MASTER_TOKO_KEY, []);
+            const i = parseInt(sel.value, 10);
+            if (isNaN(i) || !list[i]) { alert('Pilih toko yang mau dihapus'); return; }
+            if (!confirm('Hapus toko "' + list[i].nama + '"?')) return;
+            list.splice(i, 1);
+            saveJson(MASTER_TOKO_KEY, list);
+            refreshMasterTokoSelect();
+        }
+
+        // ---- Master BBM ----
+        function refreshMasterBbmSelect() {
+            const list = loadJson(MASTER_BBM_KEY, [
+                { nama: 'Pertamax', harga: 15850 },
+                { nama: 'Pertalite', harga: 10000 },
+                { nama: 'Solar', harga: 6800 },
+                { nama: 'Dexlite', harga: 14500 }
+            ]);
+            // simpan default pertama kali
+            if (!localStorage.getItem(MASTER_BBM_KEY)) saveJson(MASTER_BBM_KEY, list);
+
+            const sel = document.getElementById('masterBbmSelect');
+            if (!sel) return;
+            const current = sel.value;
+            sel.innerHTML = '<option value="">— Pilih BBM —</option>';
+            list.forEach(function (b, i) {
+                const opt = document.createElement('option');
+                opt.value = i;
+                opt.textContent = b.nama + ' (Rp ' + Number(b.harga).toLocaleString('id-ID') + ')';
+                sel.appendChild(opt);
+            });
+            if (current !== '') sel.value = current;
+        }
+        function saveMasterBbm() {
+            const nama = document.getElementById('masterBbmNama').value.trim();
+            const harga = parseInt(document.getElementById('masterBbmHarga').value, 10) || 0;
+            if (!nama) { alert('Nama BBM masih kosong'); return; }
+            const list = loadJson(MASTER_BBM_KEY, []);
+            const idx = list.findIndex(function (b) { return b.nama.toLowerCase() === nama.toLowerCase(); });
+            const data = { nama: nama, harga: harga };
+            if (idx >= 0) list[idx] = data;
+            else list.push(data);
+            saveJson(MASTER_BBM_KEY, list);
+            refreshMasterBbmSelect();
+            // langsung terapkan ke form
+            document.getElementById('jenisBBM').value = nama;
+            document.getElementById('hargaAngka').value = harga;
+            hitungOtomatis();
+            updateNota();
+            alert('BBM "' + nama + '" tersimpan');
+        }
+        function loadMasterBbm() {
+            const sel = document.getElementById('masterBbmSelect');
+            const list = loadJson(MASTER_BBM_KEY, []);
+            const i = parseInt(sel.value, 10);
+            if (isNaN(i) || !list[i]) return;
+            const b = list[i];
+            document.getElementById('jenisBBM').value = b.nama;
+            document.getElementById('hargaAngka').value = b.harga;
+            document.getElementById('masterBbmNama').value = b.nama;
+            document.getElementById('masterBbmHarga').value = b.harga;
+            hitungOtomatis();
+            updateNota();
+        }
+        function deleteMasterBbm() {
+            const sel = document.getElementById('masterBbmSelect');
+            const list = loadJson(MASTER_BBM_KEY, []);
+            const i = parseInt(sel.value, 10);
+            if (isNaN(i) || !list[i]) { alert('Pilih BBM yang mau dihapus'); return; }
+            if (!confirm('Hapus BBM "' + list[i].nama + '"?')) return;
+            list.splice(i, 1);
+            saveJson(MASTER_BBM_KEY, list);
+            refreshMasterBbmSelect();
+        }
+
+        // ---- Master Operator ----
+        function refreshMasterOpSelect() {
+            const list = loadJson(MASTER_OP_KEY, ['Operator 1', 'Operator 2', 'Bayu']);
+            if (!localStorage.getItem(MASTER_OP_KEY)) saveJson(MASTER_OP_KEY, list);
+
+            const sel = document.getElementById('masterOpSelect');
+            if (!sel) return;
+            const current = sel.value;
+            sel.innerHTML = '<option value="">— Pilih operator —</option>';
+            list.forEach(function (nama, i) {
+                const opt = document.createElement('option');
+                opt.value = i;
+                opt.textContent = nama;
+                sel.appendChild(opt);
+            });
+            if (current !== '') sel.value = current;
+        }
+        function saveMasterOp() {
+            const nama = document.getElementById('masterOpNama').value.trim();
+            if (!nama) { alert('Nama operator masih kosong'); return; }
+            const list = loadJson(MASTER_OP_KEY, []);
+            if (list.some(function (n) { return n.toLowerCase() === nama.toLowerCase(); })) {
+                alert('Operator sudah ada');
+                return;
+            }
+            list.push(nama);
+            saveJson(MASTER_OP_KEY, list);
+            refreshMasterOpSelect();
+            document.getElementById('operator').value = nama;
+            updateNota();
+            alert('Operator "' + nama + '" tersimpan');
+        }
+        function loadMasterOp() {
+            const sel = document.getElementById('masterOpSelect');
+            const list = loadJson(MASTER_OP_KEY, []);
+            const i = parseInt(sel.value, 10);
+            if (isNaN(i) || !list[i]) return;
+            document.getElementById('operator').value = list[i];
+            document.getElementById('masterOpNama').value = list[i];
+            updateNota();
+        }
+        function deleteMasterOp() {
+            const sel = document.getElementById('masterOpSelect');
+            const list = loadJson(MASTER_OP_KEY, []);
+            const i = parseInt(sel.value, 10);
+            if (isNaN(i) || !list[i]) { alert('Pilih operator yang mau dihapus'); return; }
+            if (!confirm('Hapus operator "' + list[i] + '"?')) return;
+            list.splice(i, 1);
+            saveJson(MASTER_OP_KEY, list);
+            refreshMasterOpSelect();
+        }
+
+        function initMasterData() {
+            refreshMasterTokoSelect();
+            refreshMasterBbmSelect();
+            refreshMasterOpSelect();
+        }
+
+        // ========== PENGATURAN GARIS ==========
+        function applySeparators() {
+            const map = {
+                sepAfterDate:    'sepAfterDateType',
+                sepBeforeTotal:  'sepBeforeTotalType',
+                sepAfterTotal:   'sepAfterTotalType',
+                sepBeforeFooter: 'sepBeforeFooterType'
+            };
+            const types = ['none', 'dashed', 'single', 'double', 'solid'];
+
+            Object.keys(map).forEach(function (sepId) {
+                const el = document.getElementById(sepId);
+                const sel = document.getElementById(map[sepId]);
+                if (!el || !sel) return;
+                const type = sel.value;
+                // hapus semua kelas tipe
+                types.forEach(function (t) { el.classList.remove('sep-' + t); });
+                el.classList.add('sep');
+                el.classList.add('sep-' + type);
+            });
+        }
+
+        // ========== GAYA HURUF PER BARIS ==========
+        function applyLineStyles() {
+            // Helper: terapkan ke elemen teks (bukan ke titik dua)
+            function setTextStyle(el, sizeMul, bold, tall, wide, align) {
+                if (!el) return;
+                // Tinggi = perbesar font lebih agresif + line-height
+                let finalSize = parseFloat(sizeMul) || 1;
+                if (tall) finalSize *= 1.35;
+                el.style.fontSize = finalSize + 'em';
+                el.style.fontWeight = bold ? '700' : '400';
+                el.style.letterSpacing = wide ? '0.07em' : 'normal';
+                el.style.lineHeight = tall ? '1.05' : '';
+                if (align) {
+                    el.style.textAlign = align;
+                    // untuk datetime yang pakai flex, ubah justify-content
+                    if (el.classList && el.classList.contains('datetime')) {
+                        if (align === 'left') el.style.justifyContent = 'flex-start';
+                        else if (align === 'right') el.style.justifyContent = 'flex-end';
+                        else el.style.justifyContent = 'center';
+                    }
+                }
+            }
+
+            // Helper untuk baris (label + value), titik dua dikecualikan
+            function setRowStyle(row, sizeMul, bold, tall, wide) {
+                if (!row) return;
+                const label = row.querySelector('.label');
+                const value = row.querySelector('.value');
+                const colon = row.querySelector('.colon');
+                setTextStyle(label, sizeMul, bold, tall, wide);
+                setTextStyle(value, sizeMul, bold, tall, wide);
+                // Titik dua SELALU normal supaya tetap lurus dengan baris lain
+                if (colon) {
+                    colon.style.fontSize = '1em';
+                    colon.style.fontWeight = '400';
+                    colon.style.letterSpacing = 'normal';
+                    colon.style.transform = 'none';
+                    colon.style.lineHeight = '';
+                }
+            }
+
+            // Nama Toko
+            const namaEl = document.getElementById('v-nama');
+            setTextStyle(
+                namaEl,
+                document.getElementById('styleNamaSize').value,
+                document.getElementById('styleNamaBold').checked,
+                document.getElementById('styleNamaTall').checked,
+                document.getElementById('styleNamaWide').checked,
+                document.getElementById('styleNamaAlign').value
+            );
+            // header parent juga perlu align jika nama di dalamnya
+            const headerEl = document.querySelector('.header');
+            if (headerEl && document.getElementById('styleNamaAlign')) {
+                // jangan override seluruh header; hanya nama
+            }
+
+            // Alamat & Telepon
+            const alamatSize = document.getElementById('styleAlamatSize').value;
+            const alamatBold = document.getElementById('styleAlamatBold').checked;
+            const alamatTall = document.getElementById('styleAlamatTall').checked;
+            const alamatWide = document.getElementById('styleAlamatWide').checked;
+            const alamatAlign = document.getElementById('styleAlamatAlign').value;
+            ['v-alamat1', 'v-alamat2'].forEach(id => {
+                setTextStyle(document.getElementById(id), alamatSize, alamatBold, alamatTall, alamatWide, alamatAlign);
+            });
+            const telEl = document.getElementById('v-telepon');
+            if (telEl && telEl.parentElement) {
+                setTextStyle(telEl.parentElement, alamatSize, alamatBold, alamatTall, alamatWide, alamatAlign);
+            }
+
+            // Tanggal
+            const tglBox = document.querySelector('.datetime');
+            if (tglBox) {
+                setTextStyle(
+                    tglBox,
+                    document.getElementById('styleTglSize').value,
+                    document.getElementById('styleTglBold').checked,
+                    document.getElementById('styleTglTall').checked,
+                    document.getElementById('styleTglWide').checked,
+                    document.getElementById('styleTglAlign').value
+                );
+            }
+
+            // Detail rows
+            const detailSize = document.getElementById('styleDetailSize').value;
+            const detailBold = document.getElementById('styleDetailBold').checked;
+            const detailTall = document.getElementById('styleDetailTall').checked;
+            const detailWide = document.getElementById('styleDetailWide').checked;
+
+            document.querySelectorAll('#nota .row').forEach(row => {
+                if (row.classList.contains('total-row')) return;
+                if (row.querySelector('#v-operator')) return;
+                const isDetail = row.querySelector('#v-selang, #v-nota, #v-bbm, #v-harga, #v-liter, #v-pompa, #v-polisi, #label-selang');
+                if (isDetail || row.id === 'row-pompa' || row.id === 'row-polisi') {
+                    setRowStyle(row, detailSize, detailBold, detailTall, detailWide);
+                }
+            });
+
+            // ★ Total — hanya label & value yang membesar, titik dua tetap sejajar
+            const totalRow = document.querySelector('.total-row');
+            if (totalRow) {
+                setRowStyle(
+                    totalRow,
+                    document.getElementById('styleTotalSize').value,
+                    document.getElementById('styleTotalBold').checked,
+                    document.getElementById('styleTotalTall').checked,
+                    document.getElementById('styleTotalWide').checked
+                );
+            }
+
+            // Operator
+            const opRow = document.querySelector('#nota .row #v-operator')?.closest('.row');
+            if (opRow) {
+                setRowStyle(
+                    opRow,
+                    document.getElementById('styleOpSize').value,
+                    document.getElementById('styleOpBold').checked,
+                    document.getElementById('styleOpTall').checked,
+                    document.getElementById('styleOpWide').checked
+                );
+            }
+
+            // Footer
+            const footerEl = document.querySelector('.footer');
+            if (footerEl) {
+                const footerAlign = document.getElementById('styleFooterAlign').value;
+                setTextStyle(
+                    footerEl,
+                    document.getElementById('styleFooterSize').value,
+                    document.getElementById('styleFooterBold').checked,
+                    document.getElementById('styleFooterTall').checked,
+                    document.getElementById('styleFooterWide').checked,
+                    footerAlign
+                );
+                // pastikan anak-anak footer ikut perataan
+                footerEl.querySelectorAll('.bold, .pesan').forEach(function (child) {
+                    child.style.textAlign = footerAlign;
+                });
+            }
+        }
 
         function resetData() {
             document.getElementById('template').value = 'pertashop';
             document.getElementById('paperSize').value = '80';
-            document.getElementById('fontFamily').value = "'Courier New', Courier, monospace";
+            document.getElementById('fontFamily').value = "'Share Tech Mono', 'Courier New', monospace";
             document.getElementById('fontSize').value = '13';
             document.getElementById('showLogo').checked = true;
 
@@ -1293,6 +2350,9 @@
 
         hitungOtomatis();
         updateNota();
+        applyLineStyles();
+        applySeparators();
+        initMasterData();
 
         // Register Service Worker (PWA)
         if ('serviceWorker' in navigator) {
